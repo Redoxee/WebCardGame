@@ -27,8 +27,6 @@
 
 		#glare {
 			position: absolute;
-			background-color: #FFFFFF;
-			opacity: 50%;
 			width: 100%;
 			height: 100%;
 			top: 0;
@@ -86,9 +84,9 @@
 		}
 
 		var containerRect = getElementCoord(container);
-		const cursorSimHeight = 150;
+		const cursorSimHeight = 220;
 
-		const lightDirection = (new vec3(0, 0, 1)).normalize();
+		const lightDirection = (new vec3(1, -1, 1)).normalize();
 		console.log(`lightDirection ${JSON.stringify(lightDirection)}`);
 
 		container.addEventListener('mousemove',(ev)=>{
@@ -96,13 +94,17 @@
 			const atanX = Math.atan2(Math.abs(evPosition.x), cursorSimHeight);
 			const angleX = evPosition.x === 0 ? 0 : evPosition.x > 0 ? atanX : -atanX;
 			const atanY = Math.atan2(Math.abs(evPosition.y), cursorSimHeight);
-			const angleY = evPosition.y === 0 ? 0 : evPosition.y> 0 ? -atanY : atanY;
+			const angleY = evPosition.y === 0 ? 0 : evPosition.y > 0 ? -atanY : atanY;
 
-			const rightVec 	= new vec3(Math.sin(angleY), 0, Math.cos(angleY));
-			const upVec 	= new vec3(0, Math.sin(angleX), Math.cos(angleX));
-			console.log(rightVec.dot(upVec));
-			const normal = upVec.cross(rightVec);
-			const li = normal.dot(lightDirection);
+			const sinX = Math.sin(angleX);
+			const cosX = Math.cos(angleX);
+			const sinY = Math.sin(angleY);
+			const cosY = Math.cos(angleY);
+
+			const normal = new vec3(sinX, -sinY * cosX, cosX * cosY);
+			console.log(normal);
+			const li = Math.pow(normal.dot(lightDirection), 4);
+
 			console.log(`normal:${JSON.stringify(normal)}, li:${li}`);
 
 			card.style.transform = `rotateY(${angleX}rad) rotateX(${angleY}rad)`;
