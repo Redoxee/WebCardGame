@@ -1,0 +1,112 @@
+<html>
+	<script src="js/vec3.js"></script>
+	<style>
+		body {
+			display: flex;
+			justify-content: center;
+			align-items: center;
+		}
+
+		#container {
+			width: 20em;
+			height: 20em;
+			border: solid black;
+			display: flex;
+			justify-content: center;  
+			align-items: center;
+		}
+
+
+		#testDiv {
+			width: 5em;
+			height: 7em;
+  			background-image: linear-gradient(red, yellow);
+			position: relative;
+			/* transition: all 2s; */
+		}
+
+		#glare {
+			position: absolute;
+			background-color: #FFFFFF;
+			opacity: 50%;
+			width: 100%;
+			height: 100%;
+			top: 0;
+			right: 0;
+			bottom: 0;
+			left: 0;
+		}
+
+		#card-bg {
+			position: absolute;
+			width: 100%;
+			height: 100%;
+			top: 0;
+			right: 0;
+			bottom: 0;
+			left: 0;
+		}
+	</style>
+	<body>
+		<div id='container'>
+			<div id = 'testDiv'>
+				<p>Hello</p>
+				<img id="card-bg" src="TestCard.png">
+				<img id='glare' src="TestGlare.png"></img>
+			</div>
+			
+		</div>
+	</body>
+
+	<script>
+		let container = document.getElementById('container');
+		let card = document.getElementById('testDiv');
+		let glare = document.getElementById('glare');
+		let time = 0;
+		// setInterval(()=>{
+		// 	time = time + 1;
+		// 	card.style.transform = `rotateX(${time * 1}rad)`;
+		// }, 3000);
+
+		// get document coordinates of the element
+		
+		function getElementCoord(elem) {
+			let box = elem.getBoundingClientRect();
+
+			return {
+				top: box.top + window.pageYOffset,
+				right: box.right + window.pageXOffset,
+				bottom: box.bottom + window.pageYOffset,
+				left: box.left + window.pageXOffset,
+				centerX: box.left + window.pageXOffset + (box.right - box.left) / 2,
+				centerY: box.top + window.pageYOffset + (box.bottom - box.top) / 2,
+				width: box.right - box.left,
+				height: box.top - box.bottom,
+			};
+		}
+
+		var containerRect = getElementCoord(container);
+		const cursorSimHeight = 150;
+
+		const lightDirection = (new vec3(0, 0, 1)).normalize();
+		console.log(`lightDirection ${JSON.stringify(lightDirection)}`);
+
+		container.addEventListener('mousemove',(ev)=>{
+			const evPosition = { x : ev.clientX - containerRect.centerX, y : ev.clientY - containerRect.centerY};
+			const atanX = Math.atan2(Math.abs(evPosition.x), cursorSimHeight);
+			const angleX = evPosition.x === 0 ? 0 : evPosition.x > 0 ? atanX : -atanX;
+			const atanY = Math.atan2(Math.abs(evPosition.y), cursorSimHeight);
+			const angleY = evPosition.y === 0 ? 0 : evPosition.y> 0 ? -atanY : atanY;
+
+			const rightVec 	= new vec3(Math.sin(angleY), 0, Math.cos(angleY));
+			const upVec 	= new vec3(0, Math.sin(angleX), Math.cos(angleX));
+			console.log(rightVec.dot(upVec));
+			const normal = upVec.cross(rightVec);
+			const li = normal.dot(lightDirection);
+			console.log(`normal:${JSON.stringify(normal)}, li:${li}`);
+
+			card.style.transform = `rotateY(${angleX}rad) rotateX(${angleY}rad)`;
+			glare.style.opacity = `${li * 100}%`;
+		});
+	</script>
+</html>
