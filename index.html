@@ -28,12 +28,6 @@
 			position: relative;
 		}
 
-		#card-item p {
-			color: white;
-			font-weight: bold;
-			z-index: 100;
-		}
-
 		#glare {
 			position: absolute;
 			width: 100%;
@@ -102,7 +96,12 @@
 		var containerRect = getElementCoord(container);
 		const cursorSimHeight = 220;
 		const lightDirection = (new vec3(.65, -1, .5)).normalize();
+
 		const shadowDistance = 5;
+		const shadowXFactor = lightDirection.dot(new vec3(-1, 0, 0));
+		const shadowYFactor = lightDirection.dot(new vec3(0, -1, 0));
+		const shadowOffset = {x : shadowDistance * shadowXFactor, y : shadowDistance * shadowYFactor};
+		
 		console.log(`lightDirection ${JSON.stringify(lightDirection)}`);
 
 		container.addEventListener('mousemove',(ev)=>{
@@ -124,7 +123,7 @@
 			console.log(`normal:${JSON.stringify(normal)}, li:${li}`);
 
 			card.style.transform = `rotateY(${angleX}rad) rotateX(${angleY}rad)`;
-			shadow.style.transform = `rotateY(${angleX}rad) rotateX(${angleY}rad) translate(-${shadowDistance}px, ${shadowDistance}px)`;
+			shadow.style.transform = `rotateY(${angleX}rad) rotateX(${angleY}rad) translate(${shadowOffset.x}px, ${shadowOffset.y}px)`;
 			glare.style.opacity = `${li * 100}%`;
 		});
 	</script>
