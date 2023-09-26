@@ -7,7 +7,8 @@
 			align-items: center; 
 			height: 100vh;
 			background: rgb(4,2,42);
-			background: linear-gradient(0deg, rgba(4,2,42,1) 0%, rgba(39,39,97,1) 29%, rgba(2,2,60,1) 100%); 
+			background: linear-gradient(0deg, rgba(4,2,42,1) 0%, rgba(39,39,97,1) 29%, rgba(2,2,60,1) 100%);
+			touch-action: manipulation;
 		}
 
 		#container {
@@ -90,7 +91,7 @@
 
 		var containerRect = getElementCoord(container);
 		const cursorSimHeight = 190;
-		const lightDirection = (new vec3(.5, -1, .35)).normalize();
+		const lightDirection = (new vec3(.05, -1, .15)).normalize();
 
 		const shadowDistance = 5;
 		const shadowXFactor = lightDirection.dot(new vec3(-1, 0, 0));
@@ -109,12 +110,13 @@
 			const cosX = Math.cos(angleX);
 			const sinY = Math.sin(angleY);
 			const cosY = Math.cos(angleY);
-
+			// Rotating a vector up toward the viewer to the inclination of the card.
 			const normal = new vec3(sinX, -sinY * cosX, cosX * cosY);
-			const li = Math.pow(normal.dot(lightDirection), 2);
+			const li = Math.pow(normal.dot(lightDirection), 1);
 
 			cardItem.style.transform = `rotateY(${angleX}rad) rotateX(${angleY}rad)`;
 			glare.style.opacity = `${li * 100}%`;
+			console.log(li);
 		}
 
 		container.addEventListener('pointerenter', (ev)=>{
