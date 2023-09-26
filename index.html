@@ -16,13 +16,22 @@
 			align-items: center;
 		}
 
-
-		#testDiv {
+		#card {
 			width: 5em;
 			height: 7em;
-  			background-image: linear-gradient(red, yellow);
 			position: relative;
-			/* transition: all 2s; */
+		}
+
+		#card-item {
+			width: 100%;
+			height: 100%;
+			position: relative;
+		}
+
+		#card-item p {
+			color: white;
+			font-weight: bold;
+			z-index: 100;
 		}
 
 		#glare {
@@ -44,29 +53,36 @@
 			bottom: 0;
 			left: 0;
 		}
+
+		#shadow {
+			position: absolute;
+			background: radial-gradient(#000000FF, #00000000);
+			width: 100%;
+			height: 100%;
+			top:0;
+			left: 0;
+			transform: translate(-3px, 3px);
+			border-radius: 5px;
+		}
 	</style>
 	<body>
 		<div id='container'>
-			<div id = 'testDiv'>
-				<p>Hello</p>
-				<img id="card-bg" src="TestCard.png">
-				<img id='glare' src="TestGlare.png"></img>
+			<div id="card">
+				<div id="shadow"></div>
+				<div id = 'card-item'>
+					<img id="card-bg" src="TestCard.png"></img>
+					<img id='glare' src="TestGlare.png"></img>
+				</div>
 			</div>
-			
 		</div>
 	</body>
 
 	<script>
 		let container = document.getElementById('container');
-		let card = document.getElementById('testDiv');
+		let card = document.getElementById('card-item');
 		let glare = document.getElementById('glare');
+		let shadow = document.getElementById('shadow');
 		let time = 0;
-		// setInterval(()=>{
-		// 	time = time + 1;
-		// 	card.style.transform = `rotateX(${time * 1}rad)`;
-		// }, 3000);
-
-		// get document coordinates of the element
 		
 		function getElementCoord(elem) {
 			let box = elem.getBoundingClientRect();
@@ -85,8 +101,8 @@
 
 		var containerRect = getElementCoord(container);
 		const cursorSimHeight = 220;
-
-		const lightDirection = (new vec3(1, -1, 1)).normalize();
+		const lightDirection = (new vec3(.65, -1, .5)).normalize();
+		const shadowDistance = 5;
 		console.log(`lightDirection ${JSON.stringify(lightDirection)}`);
 
 		container.addEventListener('mousemove',(ev)=>{
@@ -108,6 +124,7 @@
 			console.log(`normal:${JSON.stringify(normal)}, li:${li}`);
 
 			card.style.transform = `rotateY(${angleX}rad) rotateX(${angleY}rad)`;
+			shadow.style.transform = `rotateY(${angleX}rad) rotateX(${angleY}rad) translate(-${shadowDistance}px, ${shadowDistance}px)`;
 			glare.style.opacity = `${li * 100}%`;
 		});
 	</script>
