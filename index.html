@@ -8,8 +8,9 @@
 		}
 
 		#container {
-			width: 20em;
-			height: 20em;
+			margin: 15%;
+			width: 10em;
+			height: 10em;
 			border: solid black;
 			display: flex;
 			justify-content: center;  
@@ -19,13 +20,18 @@
 		#card {
 			width: 5em;
 			height: 7em;
-			position: relative;
+			position: absolute;
 		}
 
 		#card-item {
 			width: 100%;
 			height: 100%;
 			position: relative;
+			filter: drop-shadow(-5px 5px 5px black);
+		}
+
+		.transition-transform {
+			transition: transform 0.5s ease-out;
 		}
 
 		#glare {
@@ -47,22 +53,10 @@
 			bottom: 0;
 			left: 0;
 		}
-
-		#shadow {
-			position: absolute;
-			background: radial-gradient(#000000FF, #00000000);
-			width: 100%;
-			height: 100%;
-			top:0;
-			left: 0;
-			transform: translate(-3px, 3px);
-			border-radius: 5px;
-		}
 	</style>
 	<body>
 		<div id='container'>
-			<div id="card">
-				<div id="shadow"></div>
+			<div id="card" class="transition-transform">
 				<div id = 'card-item'>
 					<img id="card-bg" src="TestCard.png"></img>
 					<img id='glare' src="TestGlare.png"></img>
@@ -72,11 +66,10 @@
 	</body>
 
 	<script>
-		let container = document.getElementById('container');
-		let card = document.getElementById('card-item');
-		let glare = document.getElementById('glare');
-		let shadow = document.getElementById('shadow');
-		let time = 0;
+		const container = document.getElementById('container');
+		const card = document.getElementById('card');
+		const cardItem = document.getElementById('card-item');
+		const glare = document.getElementById('glare');
 		
 		function getElementCoord(elem) {
 			let box = elem.getBoundingClientRect();
@@ -94,22 +87,21 @@
 		}
 
 		var containerRect = getElementCoord(container);
-		const cursorSimHeight = 220;
-		const lightDirection = (new vec3(.65, -1, .5)).normalize();
+		const cursorSimHeight = 190;
+		const lightDirection = (new vec3(.5, -1, .35)).normalize();
 
 		const shadowDistance = 5;
 		const shadowXFactor = lightDirection.dot(new vec3(-1, 0, 0));
 		const shadowYFactor = lightDirection.dot(new vec3(0, -1, 0));
 		const shadowOffset = {x : shadowDistance * shadowXFactor, y : shadowDistance * shadowYFactor};
+		cardItem.style.filter = `drop-shadow(${shadowOffset.x}px ${shadowOffset.y}px 5px black)`;
 		
-		console.log(`lightDirection ${JSON.stringify(lightDirection)}`);
-
-		container.addEventListener('mousemove',(ev)=>{
-			const evPosition = { x : ev.clientX - containerRect.centerX, y : ev.clientY - containerRect.centerY};
-			const atanX = Math.atan2(Math.abs(evPosition.x), cursorSimHeight);
-			const angleX = evPosition.x === 0 ? 0 : evPosition.x > 0 ? atanX : -atanX;
-			const atanY = Math.atan2(Math.abs(evPosition.y), cursorSimHeight);
-			const angleY = evPosition.y === 0 ? 0 : evPosition.y > 0 ? -atanY : atanY;
+		function setOrientation(position) {
+			
+			const atanX = Math.atan2(Math.abs(position.x), cursorSimHeight);
+			const angleX = position.x === 0 ? 0 : position.x > 0 ? atanX : -atanX;
+			const atanY = Math.atan2(Math.abs(position.y), cursorSimHeight);
+			const angleY = position.y === 0 ? 0 : position.y > 0 ? -atanY : atanY;
 
 			const sinX = Math.sin(angleX);
 			const cosX = Math.cos(angleX);
@@ -117,14 +109,35 @@
 			const cosY = Math.cos(angleY);
 
 			const normal = new vec3(sinX, -sinY * cosX, cosX * cosY);
-			console.log(normal);
-			const li = Math.pow(normal.dot(lightDirection), 4);
+			const li = Math.pow(normal.dot(lightDirection), 2);
 
-			console.log(`normal:${JSON.stringify(normal)}, li:${li}`);
-
-			card.style.transform = `rotateY(${angleX}rad) rotateX(${angleY}rad)`;
-			shadow.style.transform = `rotateY(${angleX}rad) rotateX(${angleY}rad) translate(${shadowOffset.x}px, ${shadowOffset.y}px)`;
+			cardItem.style.transform = `rotateY(${angleX}rad) rotateX(${angleY}rad)`;
 			glare.style.opacity = `${li * 100}%`;
+		}
+
+		container.addEventListener('pointerenter', (ev)=>{
+			card.style.transform = 'scale(2)';
+			
+			if(cardItem.classList.contains('transition-transform')) {
+				cardItem.classList.remove('transition-transform');
+			}
 		});
+
+		container.addEventListener('pointerleave', (ev)=>{
+			card.style.transform = '';
+
+			if(!cardItem.classList.contains('transition-transform')) {
+				cardItem.classList.add('transition-transform');
+			}
+
+			setOrientation({x: 0, y: 0});
+		});
+
+		container.addEventListener('mousemove',(ev)=>{
+			const evPosition = { x : ev.clientX - containerRect.centerX, y : ev.clientY - containerRect.centerY};
+			setOrientation(evPosition);
+		});
+
+		setOrientation({x: 0, y: 0});
 	</script>
 </html>
