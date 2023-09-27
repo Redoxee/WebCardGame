@@ -24,6 +24,8 @@
 			width: 5em;
 			height: 7em;
 			position: absolute;
+    		pointer-events: none;
+        	user-select: none;
 		}
 
 		#card-item {
@@ -126,27 +128,45 @@
 			unshine.style.opacity = `${unLi * 100}%`;
 		}
 
-		container.addEventListener('pointerenter', (ev)=>{
+		container.isDragging = false;
+
+		container.addEventListener('mousedown', (ev)=>{
 			card.style.transform = 'scale(2)';
 			
 			if(cardItem.classList.contains('transition-transform')) {
 				cardItem.classList.remove('transition-transform');
 			}
+			
+			container.isDragging = true;
 		});
 
-		container.addEventListener('pointerleave', (ev)=>{
-			card.style.transform = '';
-
-			if(!cardItem.classList.contains('transition-transform')) {
-				cardItem.classList.add('transition-transform');
+		function endMove() {
+			if (container.isDragging) {
+				card.style.transform = '';
+				
+				if(!cardItem.classList.contains('transition-transform')) {
+					cardItem.classList.add('transition-transform');
+				}
+				
+				setOrientation({x: 0, y: 0});
+				container.isDragging = false;
 			}
+		}
 
-			setOrientation({x: 0, y: 0});
+		container.addEventListener('mouseup', (ev)=>{
+			endMove();
+		});
+
+		container.addEventListener('pointerleave', (ev)=> {
+			endMove();
 		});
 
 		container.addEventListener('mousemove',(ev)=>{
-			const evPosition = { x : ev.clientX - containerRect.centerX, y : ev.clientY - containerRect.centerY};
-			setOrientation(evPosition);
+			if(container.isDragging)
+			{
+				const evPosition = { x : ev.clientX - containerRect.centerX, y : ev.clientY - containerRect.centerY};
+				setOrientation(evPosition);
+			}
 		});
 
 		setOrientation({x: 0, y: 0});
