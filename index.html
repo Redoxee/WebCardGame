@@ -82,15 +82,28 @@
 		}
 
 		var containerRect = getElementCoord(container);
-		const cursorSimHeight = 190;
-		const lightDirection = (new vec3(.05, -1, .15)).normalize();
-
+		const cursorSimHeight = 190; // Higher means less rotation
 		const shadowDistance = 5;
+		const lightPower = 1.5;
+		const lightDirection = (new vec3(.15, -1, .25)).normalize();
+
+		
+		function rotatePitchRoll(vec, pitch, roll) {
+			const cp = Math.cos(pitch);
+			const sp = Math.sin(pitch);
+			const cr = Math.cos(roll);
+			const sr = Math.sin(roll);
+			
+			return new vec3(vec.x * cp + vec.z * sp, vec.x * sp * sr + vec.y * cr - vec.z * sr * cp, -vec.x * sp * cr + vec.y * sr + vec.z * cp * cr);
+		}
 		const shadowXFactor = lightDirection.dot(new vec3(-1, 0, 0));
 		const shadowYFactor = lightDirection.dot(new vec3(0, -1, 0));
 		const shadowOffset = {x : shadowDistance * shadowXFactor, y : shadowDistance * shadowYFactor};
 		cardItem.style.filter = `drop-shadow(${shadowOffset.x}px ${shadowOffset.y}px 5px black)`;
 		
+		const unLightDirection = new vec3(-lightDirection.x, -lightDirection.y, lightDirection.z);
+		
+		const backward = new vec3(0, 0, 1);
 		function setOrientation(position) {
 			
 			const atanX = Math.atan2(Math.abs(position.x), cursorSimHeight);
@@ -103,12 +116,14 @@
 			const sinY = Math.sin(angleY);
 			const cosY = Math.cos(angleY);
 			// Rotating a vector up toward the viewer to the inclination of the card.
-			const normal = new vec3(sinX, -sinY * cosX, cosX * cosY);
-			const li = Math.pow(normal.dot(lightDirection), 1);
+			const normal = rotatePitchRoll(backward, angleX, angleY);
+			const li = Math.pow(normal.dot(lightDirection), lightPower);
 
 			cardItem.style.transform = `rotateY(${angleX}rad) rotateX(${angleY}rad)`;
-			glare.style.opacity = `${li * 100}%`;
-			console.log(li);
+			shine.style.opacity = `${li * 100}%`;
+			
+			const unLi = Math.pow(normal.dot(unLightDirection), lightPower);
+			unshine.style.opacity = `${unLi * 100}%`;
 		}
 
 		container.addEventListener('pointerenter', (ev)=>{
