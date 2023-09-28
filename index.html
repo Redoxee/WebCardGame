@@ -98,6 +98,7 @@
 			
 			return new vec3(vec.x * cp + vec.z * sp, vec.x * sp * sr + vec.y * cr - vec.z * sr * cp, -vec.x * sp * cr + vec.y * sr + vec.z * cp * cr);
 		}
+
 		const shadowXFactor = lightDirection.dot(new vec3(-1, 0, 0));
 		const shadowYFactor = lightDirection.dot(new vec3(0, -1, 0));
 		const shadowOffset = {x : shadowDistance * shadowXFactor, y : shadowDistance * shadowYFactor};
@@ -121,7 +122,7 @@
 			const normal = rotatePitchRoll(backward, angleX, angleY);
 			const li = Math.pow(normal.dot(lightDirection), lightPower);
 
-			cardItem.style.transform = `rotateY(${angleX}rad) rotateX(${angleY}rad)`;
+			cardItem.style.transform = `translateZ(-100px) rotateY(${angleX}rad) rotateX(${angleY}rad)`;
 			shine.style.opacity = `${li * 100}%`;
 			
 			const unLi = Math.pow(normal.dot(unLightDirection), lightPower);
@@ -130,7 +131,7 @@
 
 		container.isDragging = false;
 
-		container.addEventListener('mousedown', (ev)=>{
+		function startMove() {
 			card.style.transform = 'scale(2)';
 			
 			if(cardItem.classList.contains('transition-transform')) {
@@ -138,7 +139,7 @@
 			}
 			
 			container.isDragging = true;
-		});
+		}
 
 		function endMove() {
 			if (container.isDragging) {
@@ -153,6 +154,10 @@
 			}
 		}
 
+		container.addEventListener('mousedown', (ev)=>{
+			startMove();
+		});
+
 		container.addEventListener('mouseup', (ev)=>{
 			endMove();
 		});
@@ -161,10 +166,32 @@
 			endMove();
 		});
 
-		container.addEventListener('mousemove',(ev)=>{
+		container.addEventListener('mousemove', (ev)=> {
+			if (container.isDragging) {
+				const targetRect = getElementCoord(ev.target);
+				const evPosition = { x : ev.clientX - targetRect.centerX, y : ev.clientY - targetRect.centerY};
+				setOrientation(evPosition);
+			}
+		});
+		
+		container.addEventListener("touchstart", (ev)=>{
+			startMove();
+		}, false);
+
+		container.addEventListener("touchcancel", (ev)=>{
+			endMove();
+		}, false);
+
+		container.addEventListener("touchend", (ev)=>{
+			endMove();
+		}, false);
+
+		container.addEventListener('touchmove',(ev)=>{
+  			ev.preventDefault();
 			if(container.isDragging)
 			{
-				const evPosition = { x : ev.clientX - containerRect.centerX, y : ev.clientY - containerRect.centerY};
+				const targetRect = getElementCoord(ev.target);
+				const evPosition = { x : ev.touches[0].clientX - targetRect.centerX, y : ev.touches[0].clientY - targetRect.centerY};
 				setOrientation(evPosition);
 			}
 		});
