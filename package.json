@@ -1,0 +1,23 @@
+{
+  "name": "webcardgame",
+  "version": "0.0.1",
+  "description": "a card game / framework, I don't know",
+  "main": "index.html",
+  "scripts": {
+    "build": "babel babel -d js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/Redoxee/WebCardGame.git"
+  },
+  "keywords": [
+    "game",
+    "cards"
+  ],
+  "author": "AntonMakesGames",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Redoxee/WebCardGame/issues"
+  },
+  "homepage": "https://github.com/Redoxee/WebCardGame#readme",
+}
