@@ -1,4 +1,4 @@
-class vec3 {
+class Vec3 {
 	x : number;
 	y: number;
 	z: number;
@@ -31,26 +31,28 @@ class vec3 {
 
 	norm() {
 		const length = this.length();
-		return new vec3(this.x / length, this.y /length, this.z / length);
+		return new Vec3(this.x / length, this.y /length, this.z / length);
 	}
 
-	dot(other : vec3) {
+	dot(other : Vec3) {
 		return this.x * other.x + this.y * other.y + this.z * other.z;
 	}
 
-	cross(other : vec3) {
-		return new vec3(
+	cross(other : Vec3) {
+		return new Vec3(
 			this.y * other.z - this.z * other.y,
 			this.z * other.x - this.x * other.z,
 			this.x * other.y - this.y * other.x,
 		);
 	}
 
-	add(other : vec3) {
-		return new vec3(this.x + other.x, this.y * other.y, this.z * other.z);
+	add(other : Vec3) {
+		return new Vec3(this.x + other.x, this.y * other.y, this.z * other.z);
 	}
 
 	scale(scale : number) {
-		return new vec3(this.x * scale, this.y * scale, this.z * scale);
+		return new Vec3(this.x * scale, this.y * scale, this.z * scale);
 	}
 }
+
+export = Vec3;
