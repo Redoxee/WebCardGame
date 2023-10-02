@@ -1,4 +1,4 @@
-define(["require", "exports", "Vec3"], function (require, exports, Vec3) {
+define(["require", "exports", "./Vec3"], function (require, exports, Vec3) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     const container = document.getElementById('container');
