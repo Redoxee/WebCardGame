@@ -2,63 +2,16 @@
 <html>
 	<head>
 		<link rel="icon" href="data:;base64,iVBORw0KGgo=">
+		<link rel="stylesheet" type="text/css" href="css/style.css" />
 	</head>
-	<style>
-		body {
-			display: flex;
-			justify-content: center;
-			align-items: center; 
-			height: 100vh;
-			background: rgb(4,2,42);
-			background: linear-gradient(0deg, rgba(4,2,42,1) 0%, rgba(39,39,97,1) 29%, rgba(2,2,60,1) 100%);
-			touch-action: manipulation;
-		}
-
-		#container {
-			width: 10em;
-			height: 10em;
-			border: solid whitesmoke;
-			display: flex;
-			justify-content: center;  
-			align-items: center;
-		}
-
-		#card {
-			width: 5em;
-			height: 7em;
-			position: absolute;
-    		pointer-events: none;
-        	user-select: none;
-		}
-
-		#card-item {
-			width: 100%;
-			height: 100%;
-			position: relative;
-			filter: drop-shadow(-5px 5px 5px black);
-		}
-
-		.transition-transform {
-			transition: transform 0.25s ease-out;
-		}
-
-		.overlay {
-			position: absolute;
-			width: 100%;
-			height: 100%;
-			top: 0;
-			right: 0;
-			bottom: 0;
-		}
-	</style>
 	<body>
 		<div id='container'>
 			<div id="card" class="transition-transform">
 				<div id = 'card-item'>
-					<img id="card-bg" class="overlay" src="CardBackground.png"></img>
-					<img id="card-bg" class="overlay" src="CardFrame.png"></img>
-					<img id='shine' class="overlay" src="CardShine.png"></img>
-					<img id='unshine' class="overlay" src="CardShadow.png"></img>
+					<img id="card-bg" class="overlay" src="medias/textures/CardBackground.png"></img>
+					<img id="card-bg" class="overlay" src="medias/textures/CardFrame.png"></img>
+					<img id='shine' class="overlay" src="medias/textures/CardShine.png"></img>
+					<img id='unshine' class="overlay" src="medias/textures/CardShadow.png"></img>
 				</div>
 			</div>
 		</div>
