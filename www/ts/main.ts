@@ -1,5 +1,3 @@
-import Vec3 = require('./vec3');
-
 interface IContainer extends HTMLElement {
 	isDragging : boolean;
 }

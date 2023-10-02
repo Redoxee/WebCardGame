@@ -20,7 +20,5 @@
     "url": "https://github.com/Redoxee/WebCardGame/issues"
   },
   "homepage": "https://github.com/Redoxee/WebCardGame#readme",
-  "dependencies": {
-    "@types/requirejs": "^2.1.35"
-  }
+  "dependencies": {}
 }

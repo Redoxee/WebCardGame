@@ -54,5 +54,3 @@ class Vec3 {
 		return new Vec3(this.x * scale, this.y * scale, this.z * scale);
 	}
 }
-
-export = Vec3;
