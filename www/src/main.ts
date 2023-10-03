@@ -6,7 +6,7 @@ const container = document.getElementById('container')! as IContainer;
 const card = document.getElementById('card')!;
 const cardItem = document.getElementById('card-item')!;
 const shine = document.getElementById('shine')!;
-const unshine = document.getElementById('unshine')!;
+const shade = document.getElementById('unshine')!;
 
 interface IBoundingRect {
 	top : number,
@@ -19,11 +19,6 @@ interface IBoundingRect {
 	
 	centerX : number,
 	centerY : number,
-}
-
-interface IVec2 {
-	x: number,
-	y: number
 }
 
 function getElementCoord(elem : HTMLElement) : IBoundingRect{
@@ -42,51 +37,22 @@ function getElementCoord(elem : HTMLElement) : IBoundingRect{
 }
 
 var containerRect = getElementCoord(container)!;
-const cursorSimHeight = 190; // Higher means less rotation
-const shadowDistance = 5;
-const lightPower = 1.5;
 
-const lightDirection = (new Vec3(.15, -1, .25)).normalize();
+const cardElements : ICardElements = {
+	root : card,
+	cardItem : cardItem,
+	shine : shine,
+	shade : shade,
+};
 
+const cardOptions : ICardPresentationOptions = {
+	lightDirection : (new Vec3(.15, -1, .25)).normalize(),
+	simHeight : 190, 
+	lightPower : 1.5,
+	shadowDistance : 5
+};
 
-function rotatePitchRoll(vec : Vec3, pitch : number, roll : number) {
-	const cp = Math.cos(pitch);
-	const sp = Math.sin(pitch);
-	const cr = Math.cos(roll);
-	const sr = Math.sin(roll);
-	
-	return new Vec3(vec.x * cp + vec.z * sp, vec.x * sp * sr + vec.y * cr - vec.z * sr * cp, -vec.x * sp * cr + vec.y * sr + vec.z * cp * cr);
-}
-
-const shadowXFactor = lightDirection.dot(new Vec3(-1, 0, 0));
-const shadowYFactor = lightDirection.dot(new Vec3(0, -1, 0));
-const shadowOffset = {x : shadowDistance * shadowXFactor, y : shadowDistance * shadowYFactor};
-cardItem.style.filter = `drop-shadow(${shadowOffset.x}px ${shadowOffset.y}px 5px black)`;
-
-const unLightDirection = new Vec3(-lightDirection.x, -lightDirection.y, lightDirection.z);
-
-const backward = new Vec3(0, 0, 1);
-function setOrientation(position : IVec2) {
-	
-	const atanX = Math.atan2(Math.abs(position.x), cursorSimHeight);
-	const angleX = position.x === 0 ? 0 : position.x > 0 ? atanX : -atanX;
-	const atanY = Math.atan2(Math.abs(position.y), cursorSimHeight);
-	const angleY = position.y === 0 ? 0 : position.y > 0 ? -atanY : atanY;
-
-	const sinX = Math.sin(angleX);
-	const cosX = Math.cos(angleX);
-	const sinY = Math.sin(angleY);
-	const cosY = Math.cos(angleY);
-	// Rotating a vector up toward the viewer to the inclination of the card.
-	const normal = rotatePitchRoll(backward, angleX, angleY);
-	const li = Math.pow(normal.dot(lightDirection), lightPower);
-
-	cardItem.style.transform = `translateZ(-100px) rotateY(${angleX}rad) rotateX(${angleY}rad)`;
-	shine.style.opacity = `${li * 100}%`;
-	
-	const unLi = Math.pow(normal.dot(unLightDirection), lightPower);
-	unshine.style.opacity = `${unLi * 100}%`;
-}
+const presentationCard = addCardPresentationCapability(cardElements, cardOptions);
 
 container.isDragging = false;
 
@@ -108,7 +74,7 @@ function endMove() {
 			cardItem.classList.add('transition-transform');
 		}
 		
-		setOrientation({x: 0, y: 0});
+		presentationCard.setOrientation(Vec2.Zero);
 		container.isDragging = false;
 	}
 }
@@ -129,8 +95,8 @@ container.addEventListener('mousemove', (ev)=> {
 	if (container.isDragging) {
 		const target = ev.target! as HTMLElement;
 		const targetRect = getElementCoord(target);
-		const evPosition = { x : ev.clientX - targetRect.centerX, y : ev.clientY - targetRect.centerY};
-		setOrientation(evPosition);
+		const evPosition = new Vec2(ev.clientX - targetRect.centerX, ev.clientY - targetRect.centerY);
+		presentationCard.setOrientation(evPosition);
 	}
 });
 
@@ -152,9 +118,10 @@ container.addEventListener('touchmove',(ev)=>{
 	{
 		const target = ev.target! as HTMLElement;
 		const targetRect = getElementCoord(target);
-		const evPosition = { x : ev.touches[0].clientX - targetRect.centerX, y : ev.touches[0].clientY - targetRect.centerY};
-		setOrientation(evPosition);
+
+		const evPosition = new Vec2(ev.touches[0].clientX - targetRect.centerX, ev.touches[0].clientY - targetRect.centerY);
+		presentationCard.setOrientation(evPosition);
 	}
 });
 
-setOrientation({x: 0, y: 0});
+presentationCard.setOrientation(Vec2.Zero);
