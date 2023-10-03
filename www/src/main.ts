@@ -1,9 +1,13 @@
 import {Vec2, Vec3} from './vec.js';
 import {ICardElements, ICardPresentationOptions, addCardPresentationCapability} from './cardTool.js';
 
+import {v4 as uuidV4} from 'uuid';
+
 interface IContainer extends HTMLElement {
 	isDragging : boolean;
 }
+
+console.log(uuidV4());
 
 const container = document.getElementById('container')! as IContainer;
 const card = document.getElementById('card')!;
