@@ -1,3 +1,5 @@
+import {Vec2, Vec3} from './vec.js';
+
 function rotatePitchRoll(vec : Vec3, pitch : number, roll : number) {
 	const cp = Math.cos(pitch);
 	const sp = Math.sin(pitch);
@@ -56,3 +58,5 @@ function addCardPresentationCapability(cardElements : ICardElements, options : I
 
 	return card;
 }
+
+export {addCardPresentationCapability, ICardElements, ICardPresentation, ICardPresentationOptions};

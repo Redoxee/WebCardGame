@@ -1,4 +1,5 @@
-"use strict";
+import { Vec2, Vec3 } from './vec.js';
+import { addCardPresentationCapability } from './cardTool.js';
 const container = document.getElementById('container');
 const card = document.getElementById('card');
 const cardItem = document.getElementById('card-item');

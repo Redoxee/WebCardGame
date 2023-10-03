@@ -1,4 +1,4 @@
-"use strict";
+import { Vec3 } from './vec.js';
 function rotatePitchRoll(vec, pitch, roll) {
     const cp = Math.cos(pitch);
     const sp = Math.sin(pitch);
@@ -29,3 +29,4 @@ function addCardPresentationCapability(cardElements, options) {
     };
     return card;
 }
+export { addCardPresentationCapability };

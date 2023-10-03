@@ -1,3 +1,6 @@
+import {Vec2, Vec3} from './vec.js';
+import {ICardElements, ICardPresentationOptions, addCardPresentationCapability} from './cardTool.js';
+
 interface IContainer extends HTMLElement {
 	isDragging : boolean;
 }

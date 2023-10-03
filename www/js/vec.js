@@ -1,4 +1,3 @@
-"use strict";
 class Vec2 {
     constructor(x, y) {
         if (x === null) {
@@ -84,3 +83,4 @@ Vec3.Left = new Vec3(-1, 0, 0);
 Vec3.Right = new Vec3(1, 0, 0);
 Vec3.Forward = new Vec3(0, 0, -1);
 Vec3.Backward = new Vec3(0, 0, 1);
+export { Vec2, Vec3 };
