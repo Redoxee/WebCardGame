@@ -1,7 +1,7 @@
 import { Vec2, Vec3 } from './vec.js';
 import { addCardPresentationCapability } from './cardTool.js';
 import { v4 as uuidV4 } from 'uuid';
-console.log(uuidV4());
+console.log('hello there ' + uuidV4());
 const container = document.getElementById('container');
 const card = document.getElementById('card');
 const cardItem = document.getElementById('card-item');

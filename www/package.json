@@ -2,9 +2,8 @@
   "name": "webcardgame",
   "version": "0.0.1",
   "description": "a card game / framework, I don't know",
-  "main": "index.html",
   "scripts": {
-    "build": "babel babel -d js"
+    "debug": "parcel index.html"
   },
   "repository": {
     "type": "git",
@@ -16,6 +15,9 @@
   ],
   "author": "AntonMakesGames",
   "license": "ISC",
+  "source": [
+    "src/*"
+  ],
   "bugs": {
     "url": "https://github.com/Redoxee/WebCardGame/issues"
   },
@@ -24,6 +26,7 @@
     "uuid": "^9.0.1"
   },
   "devDependencies": {
-    "@types/uuid": "^9.0.4"
+    "@types/uuid": "^9.0.4",
+    "parcel": "^2.9.3"
   }
 }

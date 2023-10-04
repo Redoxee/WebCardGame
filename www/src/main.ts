@@ -7,7 +7,7 @@ interface IContainer extends HTMLElement {
 	isDragging : boolean;
 }
 
-console.log(uuidV4());
+console.log('hello there ' + uuidV4());
 
 const container = document.getElementById('container')! as IContainer;
 const card = document.getElementById('card')!;
