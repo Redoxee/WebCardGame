@@ -1,13 +1,9 @@
 import {Vec2, Vec3} from './vec.js';
 import {ICardElements, ICardPresentationOptions, addCardPresentationCapability} from './cardTool.js';
 
-import {v4 as uuidV4} from 'uuid';
-
 interface IContainer extends HTMLElement {
 	isDragging : boolean;
 }
-
-console.log('hello there ' + uuidV4());
 
 const container = document.getElementById('container')! as IContainer;
 const card = document.getElementById('card')!;
@@ -64,22 +60,18 @@ const presentationCard = addCardPresentationCapability(cardElements, cardOptions
 container.isDragging = false;
 
 function startMove() {
-	card.style.transform = 'scale(2)';
+	presentationCard.setZoom(2);
 	
-	if(cardItem.classList.contains('transition-transform')) {
-		cardItem.classList.remove('transition-transform');
-	}
+	presentationCard.setSmoothOrientation(false);
 	
 	container.isDragging = true;
 }
 
 function endMove() {
 	if (container.isDragging) {
-		card.style.transform = '';
+		presentationCard.setZoom(1);
 		
-		if(!cardItem.classList.contains('transition-transform')) {
-			cardItem.classList.add('transition-transform');
-		}
+		presentationCard.setSmoothOrientation(true);
 		
 		presentationCard.setOrientation(Vec2.Zero);
 		container.isDragging = false;

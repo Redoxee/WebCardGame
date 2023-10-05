@@ -32,10 +32,6 @@ body {
 	filter: drop-shadow(-5px 5px 5px black);
 }
 
-.transition-transform {
-	transition: transform 0.25s ease-out;
-}
-
 .overlay {
 	position: absolute;
 	width: 100%;

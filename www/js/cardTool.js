@@ -1,4 +1,5 @@
 import { Vec3 } from './vec.js';
+import { addCustomStyle } from './domUtils';
 function rotatePitchRoll(vec, pitch, roll) {
     const cp = Math.cos(pitch);
     const sp = Math.sin(pitch);
@@ -26,6 +27,26 @@ function addCardPresentationCapability(cardElements, options) {
         cardElements.shine.style.opacity = `${li * 100}%`;
         const unLi = Math.pow(normal.dot(shadeDirection), options.lightPower);
         cardElements.shade.style.opacity = `${unLi * 100}%`;
+    };
+    const smoothTransition = addCustomStyle({
+        className: "zoomin",
+        content: "transition: transform 0.25s ease-out;"
+    });
+    card.classList.add(smoothTransition);
+    card.setZoom = (zoom) => {
+        card.style.transform = `scale(${zoom})`;
+    };
+    card.setSmoothOrientation = (enabled) => {
+        if (enabled) {
+            if (!cardElements.cardItem.classList.contains(smoothTransition)) {
+                cardElements.cardItem.classList.add(smoothTransition);
+            }
+        }
+        else {
+            if (cardElements.cardItem.classList.contains(smoothTransition)) {
+                cardElements.cardItem.classList.remove(smoothTransition);
+            }
+        }
     };
     return card;
 }

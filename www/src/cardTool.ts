@@ -1,4 +1,5 @@
 import {Vec2, Vec3} from './vec.js';
+import {addCustomStyle} from './domUtils';
 
 function rotatePitchRoll(vec : Vec3, pitch : number, roll : number) {
 	const cp = Math.cos(pitch);
@@ -24,7 +25,9 @@ interface ICardPresentationOptions {
 }
 
 interface ICardPresentation extends HTMLElement {
-	setOrientation(position : Vec2):void;
+	setOrientation(position : Vec2) : void;
+	setZoom(zoom : number) : void;
+	setSmoothOrientation(enabled : boolean) : void;
 }
 
 function addCardPresentationCapability(cardElements : ICardElements, options : ICardPresentationOptions) : ICardPresentation{
@@ -54,6 +57,29 @@ function addCardPresentationCapability(cardElements : ICardElements, options : I
 		
 		const unLi = Math.pow(normal.dot(shadeDirection), options.lightPower);
 		cardElements.shade.style.opacity = `${unLi * 100}%`;
+	}
+
+	const smoothTransition = addCustomStyle({
+		className:"zoomin",
+		content: "transition: transform 0.25s ease-out;"
+	});
+
+	card.classList.add(smoothTransition);
+	card.setZoom = (zoom) => {
+		card.style.transform = `scale(${zoom})`;
+	};
+
+	card.setSmoothOrientation = (enabled) => {
+		if (enabled) {
+			if(!cardElements.cardItem.classList.contains(smoothTransition)) {
+				cardElements.cardItem.classList.add(smoothTransition);
+			}
+		}
+		else {
+			if(cardElements.cardItem.classList.contains(smoothTransition)) {
+				cardElements.cardItem.classList.remove(smoothTransition);
+			}
+		}
 	}
 
 	return card;
