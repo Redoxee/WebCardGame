@@ -82,3 +82,18 @@ container.addEventListener('touchmove', (ev) => {
     }
 });
 presentationCard.setOrientation(Vec2.Zero);
+const testButton = document.getElementById('test-button');
+const targets = [
+    document.getElementById('target-1'),
+    document.getElementById('target-2'),
+    document.getElementById('target-3'),
+    document.getElementById('target-4'),
+];
+let currentIndex = 0;
+testButton.addEventListener('click', (_ev) => {
+    currentIndex = (currentIndex + 1) % targets.length;
+    const targetPosition = getElementCoord(targets[currentIndex]);
+    container.style.left = `${targetPosition.centerX}px`;
+    container.style.top = `${targetPosition.centerY}px`;
+    console.log(currentIndex);
+});

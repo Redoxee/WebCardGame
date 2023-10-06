@@ -9,12 +9,14 @@ body {
 }
 
 #container {
-	width: 10em;
-	height: 10em;
+	width: 4em;
+	height: 6em;
 	border: solid whitesmoke;
 	display: flex;
 	justify-content: center;  
 	align-items: center;
+	position: absolute;
+    transform: translate(-50%, -50%);
 }
 
 #card {
