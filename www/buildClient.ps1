@@ -18,7 +18,7 @@ tsc --build --verbose
 
 # Build client
 echo "Building project"
-npx parcel build --public-url /www/build ./index.html
+npx parcel build --public-url /WebCardGame/www/build ./index.html
 
 # Copying to build folder
 echo "Coyping from $workingFolder to $destinationFolder"
