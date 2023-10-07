@@ -37,6 +37,15 @@
 			top: 75%;
 			left: 25%;
 		}
+
+		#curve-svg {
+			position: absolute;
+			right: 2em;
+			top: 2em;
+			width: 30em;
+			height: 20em;
+			background-color: #cccccc88;
+		}
 	</style>
 	<body>
 		<div id="game-board">
@@ -46,6 +55,21 @@
 			<div id="target-4" class="target"></div>
 
 			<button id="test-button">TEST</button>
+			<svg role="img" id="curve-svg">
+				<title id="svgTitle">Curve</title>
+				<defs>
+				  <style>
+					rect {
+					  fill: #cccccc;
+					  stroke: #666;
+					  transform-origin: top;
+					}
+				  </style>
+				</defs>
+			  
+				<polyline points="0 0, 100 300" 
+				stroke="white" fill="transparent" stroke-width="2"/>
+			  </svg>
 		</div>
 		<div id='container'>
 			<div id="card">
