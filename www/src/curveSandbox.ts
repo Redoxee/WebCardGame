@@ -1,32 +1,66 @@
 import { cubicInterpolationBezier, cubicInterpolationBezierFirstDerivative } from "./math";
-
-
-function getAndSetupRangeInput(id : string, action : (event : Event)=>any) {
-	const root = document.getElementById(id)!;
-	const input = root.getElementsByTagName('input')[0];
-	const label = root.getElementsByTagName('p')[0];
-	input.addEventListener('input', (event)=> {    
-		let target = event.target as HTMLInputElement;
-		label.textContent = target.value;
-		action(event);
-	});
-}
+import {addCustomStyle} from './domUtils';
 
 function setupSandboxCurves() {
 
-	const svg = document.getElementById('curve-svg') as any as SVGSVGElement;
+	const sandboxDiv = document.createElement('div');
+	sandboxDiv.id = 'curve-sandbox';
+	addCustomStyle({
+		id:'curve-sandbox',
+		content:'position: absolute; right: 2em; top: 2em; display: flex; flex-direction: column;'
+	});
+
+	const svg  = document.createElementNS("http://www.w3.org/2000/svg", "svg") as SVGSVGElement;
+	sandboxDiv.appendChild(svg);
+	svg.id = 'curve-svg';
+	svg.setAttribute("viewBox", "0 0 100 100");
+
+	addCustomStyle({
+		id:'curve-svg',
+		content: 'width: 30em; height: 30em; background-color: #cccccc88;',
+	});
+
+	const inputClassName = addCustomStyle({
+		className: 'curve-input',
+		content: 'display: flex; flex-direction: row; width: 30em; color: white; height: 2em; align-items: center;'
+	});
+
+	function createSliderInput(name : string, onChange : (value : number)=>any) {
+		const inputRoot = document.createElement('div');
+		inputRoot.className = inputClassName;
+		const input = document.createElement('input');
+		input.type = 'range';
+		input.min = '0';
+		input.max = '1000';
+		inputRoot.appendChild(input);
+		inputRoot.id = name;
+
+		const label = document.createElement('p');
+		inputRoot.appendChild(label);
+
+		input.addEventListener('input', (event)=>{
+			const target = event.target as HTMLInputElement;
+			const value = Number(target.value) / 1000;
+			label.textContent = value.toString();
+			onChange(value);
+		});
+
+		return inputRoot;
+	}
+
+
 	const curveLine = document.createElementNS("http://www.w3.org/2000/svg", "polyline") as SVGPolylineElement;
 	svg.appendChild(curveLine);
 	curveLine.style.stroke = "white";
 	curveLine.style.fill = "transparent";
-	curveLine.style.strokeWidth = "2px";
+	curveLine.style.strokeWidth = "1px";
 	
 	
 	const speedLine = document.createElementNS("http://www.w3.org/2000/svg", "polyline") as SVGPolylineElement;
 	svg.appendChild(speedLine);
 	speedLine.style.stroke = "yellow";
 	speedLine.style.fill = "transparent";
-	speedLine.style.strokeWidth = "2px";
+	speedLine.style.strokeWidth = "1px";
 	
 	const p1 = {x: 0.98, y: 0.86};
 	const p2 = {x: 0.61, y: 1.};
@@ -35,7 +69,6 @@ function setupSandboxCurves() {
 		curveLine.points.clear();
 		speedLine.points.clear();
 		const nbIteration = 50;
-		console.log('refresh');
 		for (let i = 0; i < (nbIteration + 1); ++i)
 		{
 			const t = i / nbIteration;
@@ -54,29 +87,38 @@ function setupSandboxCurves() {
 		}
 	}
 	
-	getAndSetupRangeInput('p1x', (event)=>{
-		const target = event.target as HTMLInputElement;
-		p1.x = Number(target.value) / 1000;
+	const p1x = createSliderInput('p1x', (value)=>{
+		p1.x = Number(value);
 		renderCurve();
 	});
 
-	getAndSetupRangeInput('p1y', (event)=>{
-		const target = event.target as HTMLInputElement;
-		p1.y = Number(target.value) / 1000;
+	sandboxDiv.appendChild(p1x);
+	
+	const p1y = createSliderInput('p1y', (value)=>{
+		p1.y = Number(value);
 		renderCurve();
 	});
 
-	getAndSetupRangeInput('p2x', (event)=>{
-		const target = event.target as HTMLInputElement;
-		p2.x = Number(target.value) / 1000;
+	sandboxDiv.appendChild(p1y);
+	
+	const p2x = createSliderInput('p2x', (value)=>{
+		p2.x = Number(value);
 		renderCurve();
 	});
 
-	getAndSetupRangeInput('p2y', (event)=>{
-		const target = event.target as HTMLInputElement;
-		p2.y = Number(target.value) / 1000;
+	sandboxDiv.appendChild(p2x);
+	
+	const p2y = createSliderInput('p2y', (value)=>{
+		p2.y = Number(value);
 		renderCurve();
 	});
+
+	sandboxDiv.appendChild(p2y);
+
+	renderCurve();
+
+	const targetParent = document.getElementById('game-board');
+	targetParent?.appendChild(sandboxDiv);
 }
 
 export { setupSandboxCurves };
