@@ -1,5 +1,6 @@
 import {Vec2, Vec3} from './vec.js';
 import {ICardElements, ICardPresentationOptions, addCardPresentationCapability} from './cardTool.js';
+import {setupSandboxCurves} from './curveSandbox.js';
 
 interface IContainer extends HTMLElement {
 	isDragging : boolean;
@@ -144,34 +145,4 @@ testButton.addEventListener('click', (_ev)=>{
 	
 });
 
-interface IPoint {
-	x: number,
-	y: number
-}
-
-function CubicInterpolationBezier(t : number, p1 : IPoint, p2 : IPoint) : IPoint{
-	const tSquare = t * t;
-	const tCube = tSquare * t;
-	const p1Factor = (3 * tCube - 6 * tSquare - 3 * t);
-	const p2Factor = (-3 * tCube + 3 * tSquare);
-	const posX = p1.x * p1Factor + p2.x * p2Factor + tCube;
-	const posY = p1.y * p1Factor + p2.y * p2Factor + tCube;
-	return {x: posX , y: posY};
-}
-
-const svg = document.getElementById('curve-svg') as any as SVGSVGElement;
-const curveLine = svg.getElementsByTagName('polyline')[0];
-curveLine.points.clear();
-const nbIteration = 10;
-for (let i = 0; i < nbIteration; ++i)
-{
-	const t = i / nbIteration;
-	const p1 = {x: 0.57, y: 0.17};
-	const p2 = {x: 0.55, y: 0.84};
-	const p = CubicInterpolationBezier(t , p1, p2);
-
-	const point = svg.createSVGPoint();
-	point.x = p.x;
-	point.y = p.y;
-	curveLine.points.appendItem(point);
-}
+setupSandboxCurves();
