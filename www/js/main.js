@@ -1,6 +1,5 @@
 import { Vec2, Vec3 } from './vec.js';
 import { addCardPresentationCapability } from './cardTool.js';
-import { setupSandboxCurves } from './curveSandbox.js';
 import { getElementBounds } from './domUtils.js';
 const container = document.getElementById('container');
 const card = document.getElementById('card');
@@ -86,4 +85,5 @@ testButton.addEventListener('click', (_ev) => {
     container.style.top = `${targetPosition.centerY}px`;
     console.log(currentIndex);
 });
-setupSandboxCurves();
+function lerpCardElement(target, t, p0, p1) {
+}

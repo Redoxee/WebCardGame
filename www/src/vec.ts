@@ -32,24 +32,28 @@ class Vec2 {
 		return new Vec2(this.x / length, this.y /length);
 	}
 
-	dot(other : Vec2) {
-		return this.x * other.x + this.y * other.y;
+	scale(scale : number) {
+		return new Vec2(this.x * scale, this.y * scale);
 	}
 
-	cross(other : Vec2) {
+	static dot(a: Vec2, b : Vec2) {
+		return a.x * b.x + a.y * b.y;
+	}
+
+	static cross(a: Vec2, b : Vec2) {
 		return new Vec3(
 			0,
 			0,
-			this.x * other.y - this.y * other.x,
+			a.x * b.y - a.y * b.x,
 		);
 	}
 
-	add(other : Vec2) {
-		return new Vec2(this.x + other.x, this.y + other.y);
+	static add(a: Vec2, b : Vec2) {
+		return new Vec2(a.x + b.x, a.y + b.y);
 	}
 
-	scale(scale : number) {
-		return new Vec2(this.x * scale, this.y * scale);
+	static sub(a: Vec2, b : Vec2) {
+		return new Vec2(a.x - b.x, a.y - b.y);
 	}
 }
 
@@ -97,24 +101,28 @@ class Vec3 {
 		return new Vec3(this.x / length, this.y /length, this.z / length);
 	}
 
-	dot(other : Vec3) {
-		return this.x * other.x + this.y * other.y + this.z * other.z;
+	scale(scale : number) {
+		return new Vec3(this.x * scale, this.y * scale, this.z * scale);
 	}
 
-	cross(other : Vec3) {
+	static dot(a : Vec3, b : Vec3) {
+		return a.x * b.x + a.y * b.y + a.z * b.z;
+	}
+
+	static cross(a : Vec3, b : Vec3) {
 		return new Vec3(
-			this.y * other.z - this.z * other.y,
-			this.z * other.x - this.x * other.z,
-			this.x * other.y - this.y * other.x,
+			a.y * b.z - a.z * b.y,
+			a.z * b.x - a.x * b.z,
+			a.x * b.y - a.y * b.x,
 		);
 	}
 
-	add(other : Vec3) {
-		return new Vec3(this.x + other.x, this.y + other.y, this.z + other.z);
+	static add(a : Vec3, b : Vec3) {
+		return new Vec3(a.x + b.x, a.y + b.y, a.z + b.z);
 	}
 
-	scale(scale : number) {
-		return new Vec3(this.x * scale, this.y * scale, this.z * scale);
+	static sub(a: Vec3, b: Vec3) {
+		return new Vec3(a.x - b.x, a.y - b.y, a.z - b.z);
 	}
 }
 

@@ -54,7 +54,6 @@ function setupSandboxCurves() {
         curveLine.points.clear();
         speedLine.points.clear();
         const nbIteration = 50;
-        console.log('refresh');
         for (let i = 0; i < (nbIteration + 1); ++i) {
             const t = i / nbIteration;
             const p = cubicInterpolationBezier(t, p1, p2);
