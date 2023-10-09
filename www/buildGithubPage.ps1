@@ -5,6 +5,8 @@ echo $scriptPath
 $workingFolder = ".\dist"
 $destinationFolder = ".\build"
 
+$projectUrl = "/WebCardGame/www/build"
+
 # Clean folders
 echo "cleaning $workingFolder"
 Get-ChildItem $workingFolder | Remove-Item -Force -Verbose
@@ -18,7 +20,7 @@ tsc --build --verbose
 
 # Build client
 echo "Building project"
-npx parcel build --public-url /WebCardGame/www/build ./index.html
+npx parcel build --public-url $projectUrl ./index.html
 
 # Copying to build folder
 echo "Coyping from $workingFolder to $destinationFolder"

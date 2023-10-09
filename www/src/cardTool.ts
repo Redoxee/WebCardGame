@@ -1,4 +1,4 @@
-import {Vec2, Vec3} from './vec.js';
+import {Vec2, Vec3} from './vec';
 import {addCustomStyle} from './domUtils';
 
 function rotatePitchRoll(vec : Vec3, pitch : number, roll : number) {
@@ -12,6 +12,7 @@ function rotatePitchRoll(vec : Vec3, pitch : number, roll : number) {
 
 interface ICardElements {
 	root : HTMLElement,
+	zoomable : HTMLElement,
 	cardItem : HTMLElement,
 	shine : HTMLElement,
 	shade : HTMLElement
@@ -25,6 +26,7 @@ interface ICardPresentationOptions {
 }
 
 interface ICardPresentation extends HTMLElement {
+	root : HTMLElement;
 	setOrientation(position : Vec2) : void;
 	setZoom(zoom : number) : void;
 	setSmoothOrientation(enabled : boolean) : void;
@@ -32,10 +34,12 @@ interface ICardPresentation extends HTMLElement {
 
 function addCardPresentationCapability(cardElements : ICardElements, options : ICardPresentationOptions) : ICardPresentation{
 	const card = cardElements.root as ICardPresentation;
-
+	card.root = cardElements.root;
+	const zoomElement = cardElements.zoomable;
+	
 	const shadowOffset = {
-		x : options.shadowDistance * options.lightDirection.dot(Vec3.Left), 
-		y : options.shadowDistance * options.lightDirection.dot(Vec3.Down)
+		x : options.shadowDistance * Vec3.dot(options.lightDirection, Vec3.Left), 
+		y : options.shadowDistance * Vec3.dot(options.lightDirection, Vec3.Down)
 	};
 
 	cardElements.cardItem.style.filter = `drop-shadow(${shadowOffset.x}px ${shadowOffset.y}px 5px black)`;
@@ -50,12 +54,12 @@ function addCardPresentationCapability(cardElements : ICardElements, options : I
 	
 		// Rotating a vector up toward the viewer to the inclination of the card.
 		const normal = rotatePitchRoll(Vec3.Backward, angleX, angleY);
-		const li = Math.pow(normal.dot(options.lightDirection), options.lightPower);
+		const li = Math.pow(Vec3.dot(normal, options.lightDirection), options.lightPower);
 	
 		cardElements.cardItem.style.transform = `rotateY(${angleX}rad) rotateX(${angleY}rad)`;
 		cardElements.shine.style.opacity = `${li * 100}%`;
 		
-		const unLi = Math.pow(normal.dot(shadeDirection), options.lightPower);
+		const unLi = Math.pow(Vec3.dot(normal, shadeDirection), options.lightPower);
 		cardElements.shade.style.opacity = `${unLi * 100}%`;
 	}
 
@@ -64,9 +68,9 @@ function addCardPresentationCapability(cardElements : ICardElements, options : I
 		content: "transition: transform 0.25s ease-out;"
 	});
 
-	card.classList.add(smoothTransition);
+	zoomElement.classList.add(smoothTransition);
 	card.setZoom = (zoom) => {
-		card.style.transform = `scale(${zoom})`;
+		zoomElement.style.transform = `scale(${zoom})`;
 	};
 
 	card.setSmoothOrientation = (enabled) => {
