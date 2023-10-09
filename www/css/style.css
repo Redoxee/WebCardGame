@@ -9,8 +9,8 @@ body {
 }
 
 #container {
-	width: 4em;
-	height: 6em;
+	width: 10em;
+	height: 10em;
 	border: solid whitesmoke;
 	display: flex;
 	justify-content: center;  
@@ -43,4 +43,14 @@ body {
 	top: 0;
 	right: 0;
 	bottom: 0;
+}
+
+.card-illustration {
+	position: absolute;
+	width: 90%;
+	max-height: 50%;
+	height: auto;
+	top: 33%;
+	left: 50%;
+    transform: translate(-50%, -50%);
 }
