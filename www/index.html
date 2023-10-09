@@ -38,13 +38,23 @@
 			left: 25%;
 		}
 
-		#curve-svg {
+		#curve-sandbox {
 			position: absolute;
 			right: 2em;
 			top: 2em;
+			display: flex;
+			flex-direction: column;
+		}
+		#curve-svg {
 			width: 30em;
-			height: 20em;
+			height: 30em;
 			background-color: #cccccc88;
+		}
+		.curve-input {
+			display: flex;
+			flex-direction: row;
+			width: 30em;
+			color: white;
 		}
 	</style>
 	<body>
@@ -55,22 +65,28 @@
 			<div id="target-4" class="target"></div>
 
 			<button id="test-button">TEST</button>
-			<svg role="img" id="curve-svg">
-				<title id="svgTitle">Curve</title>
-				<defs>
-				  <style>
-					rect {
-					  fill: #cccccc;
-					  stroke: #666;
-					  transform-origin: top;
-					}
-				  </style>
-				</defs>
-			  
-				<polyline points="0 0, 100 300" 
-				stroke="white" fill="transparent" stroke-width="2"/>
-			  </svg>
-		</div>
+
+			<div id="curve-sandbox">
+				<svg role="img" id="curve-svg" viewBox="0 0 100 100">
+					<title id="svgTitle">Curve</title>
+				</svg>
+				<div class="curve-input" id="p1x">
+					<input type="range" name="p1x" min="0" max="1000" />
+					<p></p>
+				</div>
+				<div class="curve-input" id="p1y">
+					<input type="range" name="p1y" min="0" max="1000" />
+					<p></p>
+				</div>
+				<div class="curve-input" id="p2x">
+					<input type="range" name="p2x" min="0" max="1000" />
+					<p></p>
+				</div>
+				<div class="curve-input" id="p2y">
+						<input type="range" name="p2y" min="0" max="1000" />
+						<p></p>
+				</div>
+			</div>
 		<div id='container'>
 			<div id="card">
 				<div id = 'card-item'>
