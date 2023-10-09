@@ -1,6 +1,7 @@
 import {Vec2, Vec3} from './vec.js';
 import {ICardElements, ICardPresentationOptions, addCardPresentationCapability} from './cardTool.js';
 import {setupSandboxCurves} from './curveSandbox.js';
+import {getElementBounds} from './domUtils.js';
 
 interface IContainer extends HTMLElement {
 	isDragging : boolean;
@@ -12,35 +13,7 @@ const cardItem = document.getElementById('card-item')!;
 const shine = document.getElementById('shine')!;
 const shade = document.getElementById('unshine')!;
 
-interface IBoundingRect {
-	top : number,
-	right : number,
-	bottom : number,
-	left : number,
-
-	width : number,
-	height : number,
-	
-	centerX : number,
-	centerY : number,
-}
-
-function getElementCoord(elem : HTMLElement) : IBoundingRect{
-	let box = elem.getBoundingClientRect();
-
-	return {
-		top: box.top + window.pageYOffset,
-		right: box.right + window.pageXOffset,
-		bottom: box.bottom + window.pageYOffset,
-		left: box.left + window.pageXOffset,
-		centerX: box.left + window.pageXOffset + (box.right - box.left) / 2,
-		centerY: box.top + window.pageYOffset + (box.bottom - box.top) / 2,
-		width: box.right - box.left,
-		height: box.top - box.bottom,
-	};
-}
-
-var containerRect = getElementCoord(container)!;
+var containerRect = getElementBounds(container)!;
 
 const cardElements : ICardElements = {
 	root : card,
@@ -94,7 +67,7 @@ container.addEventListener('pointerleave', (ev)=> {
 container.addEventListener('mousemove', (ev)=> {
 	if (container.isDragging) {
 		const target = ev.target! as HTMLElement;
-		const targetRect = getElementCoord(target);
+		const targetRect = getElementBounds(target);
 		const evPosition = new Vec2(ev.clientX - targetRect.centerX, ev.clientY - targetRect.centerY);
 		presentationCard.setOrientation(evPosition);
 	}
@@ -117,7 +90,7 @@ container.addEventListener('touchmove',(ev)=>{
 	if(container.isDragging)
 	{
 		const target = ev.target! as HTMLElement;
-		const targetRect = getElementCoord(target);
+		const targetRect = getElementBounds(target);
 
 		const evPosition = new Vec2(ev.touches[0].clientX - targetRect.centerX, ev.touches[0].clientY - targetRect.centerY);
 		presentationCard.setOrientation(evPosition);
@@ -138,7 +111,7 @@ let currentIndex = 0;
 
 testButton.addEventListener('click', (_ev)=>{
 	currentIndex = (currentIndex + 1) % targets.length;
-	const targetPosition = getElementCoord(targets[currentIndex]);
+	const targetPosition = getElementBounds(targets[currentIndex]);
 	container.style.left = `${targetPosition.centerX}px`;
 	container.style.top = `${targetPosition.centerY}px`;
 	console.log(currentIndex);
