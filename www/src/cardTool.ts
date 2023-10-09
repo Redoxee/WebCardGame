@@ -12,6 +12,7 @@ function rotatePitchRoll(vec : Vec3, pitch : number, roll : number) {
 
 interface ICardElements {
 	root : HTMLElement,
+	zoomable : HTMLElement,
 	cardItem : HTMLElement,
 	shine : HTMLElement,
 	shade : HTMLElement
@@ -34,6 +35,7 @@ interface ICardPresentation extends HTMLElement {
 function addCardPresentationCapability(cardElements : ICardElements, options : ICardPresentationOptions) : ICardPresentation{
 	const card = cardElements.root as ICardPresentation;
 	card.root = cardElements.root;
+	const zoomElement = cardElements.zoomable;
 	
 	const shadowOffset = {
 		x : options.shadowDistance * Vec3.dot(options.lightDirection, Vec3.Left), 
@@ -66,9 +68,9 @@ function addCardPresentationCapability(cardElements : ICardElements, options : I
 		content: "transition: transform 0.25s ease-out;"
 	});
 
-	card.classList.add(smoothTransition);
+	zoomElement.classList.add(smoothTransition);
 	card.setZoom = (zoom) => {
-		card.style.transform = `scale(${zoom})`;
+		zoomElement.style.transform = `scale(${zoom})`;
 	};
 
 	card.setSmoothOrientation = (enabled) => {

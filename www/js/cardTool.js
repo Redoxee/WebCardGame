@@ -1,4 +1,4 @@
-import { Vec3 } from './vec.js';
+import { Vec3 } from './vec';
 import { addCustomStyle } from './domUtils';
 function rotatePitchRoll(vec, pitch, roll) {
     const cp = Math.cos(pitch);
@@ -9,6 +9,8 @@ function rotatePitchRoll(vec, pitch, roll) {
 }
 function addCardPresentationCapability(cardElements, options) {
     const card = cardElements.root;
+    card.root = cardElements.root;
+    const zoomElement = cardElements.zoomable;
     const shadowOffset = {
         x: options.shadowDistance * Vec3.dot(options.lightDirection, Vec3.Left),
         y: options.shadowDistance * Vec3.dot(options.lightDirection, Vec3.Down)
@@ -32,9 +34,9 @@ function addCardPresentationCapability(cardElements, options) {
         className: "zoomin",
         content: "transition: transform 0.25s ease-out;"
     });
-    card.classList.add(smoothTransition);
+    zoomElement.classList.add(smoothTransition);
     card.setZoom = (zoom) => {
-        card.style.transform = `scale(${zoom})`;
+        zoomElement.style.transform = `scale(${zoom})`;
     };
     card.setSmoothOrientation = (enabled) => {
         if (enabled) {

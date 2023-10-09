@@ -15,6 +15,10 @@ class Vec2 {
 		}
 	}
 
+	toString() : string {
+		return `(${this.x}, ${this.y})`;
+	}
+
 	length() {
 		return Math.sqrt(this.x * this.x + this.y * this.y);
 	}
@@ -85,6 +89,10 @@ class Vec3 {
 			this.y = y;
 			this.z = z;
 		}
+	}
+
+	toString() : string {
+		return `(${this.x}, ${this.y}, ${this.z})`;
 	}
 
 	length() {

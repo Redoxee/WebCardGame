@@ -9,6 +9,9 @@ class Vec2 {
             this.y = y;
         }
     }
+    toString() {
+        return `(${this.x}, ${this.y})`;
+    }
     length() {
         return Math.sqrt(this.x * this.x + this.y * this.y);
     }
@@ -37,6 +40,9 @@ class Vec2 {
     static sub(a, b) {
         return new Vec2(a.x - b.x, a.y - b.y);
     }
+    static equal(a, b) {
+        return a.x === b.x && a.y === b.y;
+    }
 }
 Vec2.Zero = new Vec2(0, 0);
 class Vec3 {
@@ -51,6 +57,9 @@ class Vec3 {
             this.y = y;
             this.z = z;
         }
+    }
+    toString() {
+        return `(${this.x}, ${this.y}, ${this.z})`;
     }
     length() {
         return Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z);
@@ -80,6 +89,9 @@ class Vec3 {
     }
     static sub(a, b) {
         return new Vec3(a.x - b.x, a.y - b.y, a.z - b.z);
+    }
+    static equal(a, b) {
+        return a.x === b.x && a.y === b.y && a.z === b.z;
     }
 }
 Vec3.Zero = new Vec3(0, 0, 0);
