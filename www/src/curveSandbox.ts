@@ -48,7 +48,6 @@ function setupSandboxCurves() {
 		return inputRoot;
 	}
 
-
 	const curveLine = document.createElementNS("http://www.w3.org/2000/svg", "polyline") as SVGPolylineElement;
 	svg.appendChild(curveLine);
 	curveLine.style.stroke = "white";
@@ -62,8 +61,7 @@ function setupSandboxCurves() {
 	speedLine.style.fill = "transparent";
 	speedLine.style.strokeWidth = "1px";
 	
-	const p1 = {x: 0.98, y: 0.86};
-	const p2 = {x: 0.61, y: 1.};
+	const bezier = {p1x : 0.98, p1y : 0.86, p2x : 0.61, p2y : 1};
 	
 	function renderCurve() {
 		curveLine.points.clear();
@@ -72,14 +70,14 @@ function setupSandboxCurves() {
 		for (let i = 0; i < (nbIteration + 1); ++i)
 		{
 			const t = i / nbIteration;
-			const p = cubicInterpolationBezier(t , p1, p2);
+			const p = cubicInterpolationBezier(t , bezier);
 			
 			const point = svg.createSVGPoint();
 			point.x = p.x * 100;
 			point.y = 100 - p.y * 100;
 			curveLine.points.appendItem(point);
 			
-			const speed = cubicInterpolationBezierFirstDerivative(t, p1, p2);
+			const speed = cubicInterpolationBezierFirstDerivative(t, bezier);
 			const speedPoint = svg.createSVGPoint();
 			speedPoint.x = t * 100;
 			speedPoint.y = 100 - speed.y * 100;
@@ -88,28 +86,28 @@ function setupSandboxCurves() {
 	}
 	
 	const p1x = createSliderInput('p1x', (value)=>{
-		p1.x = Number(value);
+		bezier.p1x = Number(value);
 		renderCurve();
 	});
 
 	sandboxDiv.appendChild(p1x);
 	
 	const p1y = createSliderInput('p1y', (value)=>{
-		p1.y = Number(value);
+		bezier.p1y = Number(value);
 		renderCurve();
 	});
 
 	sandboxDiv.appendChild(p1y);
 	
 	const p2x = createSliderInput('p2x', (value)=>{
-		p2.x = Number(value);
+		bezier.p2x = Number(value);
 		renderCurve();
 	});
 
 	sandboxDiv.appendChild(p2x);
 	
 	const p2y = createSliderInput('p2y', (value)=>{
-		p2.y = Number(value);
+		bezier.p2y = Number(value);
 		renderCurve();
 	});
 

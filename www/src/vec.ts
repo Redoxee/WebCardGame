@@ -55,6 +55,10 @@ class Vec2 {
 	static sub(a: Vec2, b : Vec2) {
 		return new Vec2(a.x - b.x, a.y - b.y);
 	}
+
+	static equal(a: Vec2, b : Vec2) {
+		return a.x === b.x && a.y === b.y;
+	}
 }
 
 class Vec3 {
@@ -123,6 +127,10 @@ class Vec3 {
 
 	static sub(a: Vec3, b: Vec3) {
 		return new Vec3(a.x - b.x, a.y - b.y, a.z - b.z);
+	}
+
+	static equal(a: Vec3, b : Vec3) {
+		return a.x === b.x && a.y === b.y && a.z === b.z;
 	}
 }
 

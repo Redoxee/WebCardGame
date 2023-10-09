@@ -1,4 +1,4 @@
-import {Vec2, Vec3} from './vec.js';
+import {Vec2, Vec3} from './vec';
 import {addCustomStyle} from './domUtils';
 
 function rotatePitchRoll(vec : Vec3, pitch : number, roll : number) {
@@ -25,6 +25,7 @@ interface ICardPresentationOptions {
 }
 
 interface ICardPresentation extends HTMLElement {
+	root : HTMLElement;
 	setOrientation(position : Vec2) : void;
 	setZoom(zoom : number) : void;
 	setSmoothOrientation(enabled : boolean) : void;
@@ -32,7 +33,8 @@ interface ICardPresentation extends HTMLElement {
 
 function addCardPresentationCapability(cardElements : ICardElements, options : ICardPresentationOptions) : ICardPresentation{
 	const card = cardElements.root as ICardPresentation;
-
+	card.root = cardElements.root;
+	
 	const shadowOffset = {
 		x : options.shadowDistance * Vec3.dot(options.lightDirection, Vec3.Left), 
 		y : options.shadowDistance * Vec3.dot(options.lightDirection, Vec3.Down)
