@@ -1,48 +1,19 @@
-import {Vec2, Vec3} from './vec.js';
-import {ICardElements, ICardPresentationOptions, addCardPresentationCapability} from './cardTool.js';
+import {Vec2, Vec3} from './vec';
+import {ICardElements, ICardPresentationOptions, addCardPresentationCapability, ICardPresentation} from './cardTool';
+import {setupSandboxCurves} from './curveSandbox';
+import {getElementBounds} from './domUtils';
+import { cubicInterpolationBezier, cubicInterpolationBezierFirstDerivative } from './math';
+import { stringify } from 'uuid';
 
-interface IContainer extends HTMLElement {
-	isDragging : boolean;
-}
-
-const container = document.getElementById('container')! as IContainer;
+const container = document.getElementById('container')!;
 const card = document.getElementById('card')!;
 const cardItem = document.getElementById('card-item')!;
 const shine = document.getElementById('shine')!;
 const shade = document.getElementById('unshine')!;
 
-interface IBoundingRect {
-	top : number,
-	right : number,
-	bottom : number,
-	left : number,
-
-	width : number,
-	height : number,
-	
-	centerX : number,
-	centerY : number,
-}
-
-function getElementCoord(elem : HTMLElement) : IBoundingRect{
-	let box = elem.getBoundingClientRect();
-
-	return {
-		top: box.top + window.pageYOffset,
-		right: box.right + window.pageXOffset,
-		bottom: box.bottom + window.pageYOffset,
-		left: box.left + window.pageXOffset,
-		centerX: box.left + window.pageXOffset + (box.right - box.left) / 2,
-		centerY: box.top + window.pageYOffset + (box.bottom - box.top) / 2,
-		width: box.right - box.left,
-		height: box.top - box.bottom,
-	};
-}
-
-var containerRect = getElementCoord(container)!;
-
 const cardElements : ICardElements = {
-	root : card,
+	root : container,
+	zoomable : card,
 	cardItem : cardItem,
 	shine : shine,
 	shade : shade,
@@ -57,24 +28,24 @@ const cardOptions : ICardPresentationOptions = {
 
 const presentationCard = addCardPresentationCapability(cardElements, cardOptions);
 
-container.isDragging = false;
+let isDragging = false;
 
 function startMove() {
 	presentationCard.setZoom(2);
 	
 	presentationCard.setSmoothOrientation(false);
 	
-	container.isDragging = true;
+	isDragging = true;
 }
 
 function endMove() {
-	if (container.isDragging) {
+	if (isDragging) {
 		presentationCard.setZoom(1);
 		
 		presentationCard.setSmoothOrientation(true);
 		
 		presentationCard.setOrientation(Vec2.Zero);
-		container.isDragging = false;
+		isDragging = false;
 	}
 }
 
@@ -91,9 +62,9 @@ container.addEventListener('pointerleave', (ev)=> {
 });
 
 container.addEventListener('mousemove', (ev)=> {
-	if (container.isDragging) {
+	if (isDragging) {
 		const target = ev.target! as HTMLElement;
-		const targetRect = getElementCoord(target);
+		const targetRect = getElementBounds(target);
 		const evPosition = new Vec2(ev.clientX - targetRect.centerX, ev.clientY - targetRect.centerY);
 		presentationCard.setOrientation(evPosition);
 	}
@@ -113,10 +84,10 @@ container.addEventListener("touchend", (ev)=>{
 
 container.addEventListener('touchmove',(ev)=>{
 	ev.preventDefault();
-	if(container.isDragging)
+	if(isDragging)
 	{
 		const target = ev.target! as HTMLElement;
-		const targetRect = getElementCoord(target);
+		const targetRect = getElementBounds(target);
 
 		const evPosition = new Vec2(ev.touches[0].clientX - targetRect.centerX, ev.touches[0].clientY - targetRect.centerY);
 		presentationCard.setOrientation(evPosition);
@@ -124,3 +95,90 @@ container.addEventListener('touchmove',(ev)=>{
 });
 
 presentationCard.setOrientation(Vec2.Zero);
+
+const testButton = document.getElementById('test-button') as HTMLButtonElement;
+const targets = [
+	document.getElementById('target-1')!,
+	document.getElementById('target-2')!,
+	document.getElementById('target-3')!,
+	document.getElementById('target-4')!,
+];
+
+let currentIndex = 0;
+
+
+function getBezierParams(distance : number) {
+	return {
+		p1x : .32,
+		p1y : .0,
+		p2x : .5,
+		p2y : 1
+	}
+}
+
+function lerpCardElement(target : ICardPresentation, t : number, p0 : Vec2, p1 : Vec2) {
+	if (Vec2.equal(p0, p1)) {
+		return;
+	}
+	
+	const travel = Vec2.sub(p1, p0);
+	console.log(`${p0} - ${p1} = ${travel}` );
+	const bezierParams = getBezierParams(travel.length());
+	const direction = travel.norm();
+	const transformedTime = cubicInterpolationBezier(t, bezierParams);
+
+	const currentPos = Vec2.add(p0, travel.scale(transformedTime.y));
+	target.root.style.left = `${currentPos.x}px`;
+	target.root.style.top = `${currentPos.y}px`;
+	const transformedAcceleration = cubicInterpolationBezierFirstDerivative(t, bezierParams).scale(100);
+	target.setOrientation(direction.scale(transformedAcceleration.y));
+}
+
+class CardLerpAnimation {
+	p0 : Vec2;
+	p1 : Vec2;
+	duration : number;
+	endTime : number;
+	startTime : number;
+	target : ICardPresentation;
+
+	constructor(target : ICardPresentation, duration : number) {
+		this.target = target;
+		this.duration = duration * 1000;
+		this.p0 = Vec2.Zero;
+		this.p1 = Vec2.Zero;
+		this.endTime = 0;
+		this.startTime = -1;
+	};
+
+	playAnimation(p0 : Vec2, p1 : Vec2) {
+		this.p0 = p0;
+		this.p1 = p1;
+		this.startTime = performance.now();
+		this.endTime = this.startTime + this.duration;
+		requestAnimationFrame(lerpCardAnimationCallback);
+	}
+};
+
+const testAnimation = new CardLerpAnimation(presentationCard, 2);
+
+function lerpCardAnimationCallback(timeStamp : number) {
+	if (testAnimation.endTime < timeStamp || testAnimation.duration === 0)
+	{
+		// TODO FINISH Animation
+		return;
+	}
+
+	const t = (timeStamp - testAnimation.startTime) / testAnimation.duration;
+	lerpCardElement(testAnimation.target, t, testAnimation.p0, testAnimation.p1);
+	requestAnimationFrame(lerpCardAnimationCallback);
+}
+
+testButton.addEventListener('click', (_ev)=>{
+	currentIndex = (currentIndex + 1) % targets.length;
+	const startPosition = getElementBounds(presentationCard.root)
+	const targetPosition = getElementBounds(targets[currentIndex]);
+	testAnimation.playAnimation(
+		new Vec2(startPosition.centerX, startPosition.centerY),
+		new Vec2(targetPosition.centerX, targetPosition.centerY));
+});

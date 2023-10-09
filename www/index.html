@@ -4,11 +4,53 @@
 		<link rel="icon" href="data:;base64,iVBORw0KGgo=">
 		<link rel="stylesheet" type="text/css" href="css/style.css" />	  
 	</head>
+	<style>
+		#game-board {
+			width: 100%;
+			height: 100%;
+			border: solid 3px yellow;
+		}
+
+		.target {
+			background-color: burlywood;
+			height: 3px;
+			width: 3px;
+			position: relative;
+		}
+
+		#target-1 {
+			top: 25%;
+			left: 25%;
+		}
+
+		#target-2 {
+			top: 25%;
+			left: 75%;
+		}
+
+		#target-3 {
+			top: 75%;
+			left: 75%;
+		}
+
+		#target-4 {
+			top: 75%;
+			left: 25%;
+		}
+	</style>
 	<body>
+		<div id="game-board">
+			<div id="target-1" class="target"></div>
+			<div id="target-2" class="target"></div>
+			<div id="target-3" class="target"></div>
+			<div id="target-4" class="target"></div>
+
+			<button id="test-button">TEST</button>
 		<div id='container'>
 			<div id="card">
 				<div id = 'card-item'>
 					<img id="card-bg" class="overlay" src="medias/textures/CardBackground.png"></img>
+					<img id='illustration' class="card-illustration" src="medias/textures/TestImage.png"></img>
 					<img id="card-bg" class="overlay" src="medias/textures/CardFrame.png"></img>
 					<img id='shine' class="overlay" src="medias/textures/CardShine.png"></img>
 					<img id='unshine' class="overlay" src="medias/textures/CardShadow.png"></img>
