@@ -7,6 +7,13 @@ interface IBezierParams {
 	p2y: number,
 }
 
+const DefaultBezierParams = {
+	p1x : 0.5,
+	p1y : 0.5,
+	p2x : 0.5,
+	p2y : 0.5,
+}
+
 function cubicInterpolationBezier(t : number, params : IBezierParams) : Vec2{
 	const tSquare = t * t;
 	const tCube = tSquare * t;
@@ -34,4 +41,4 @@ function cubicInterpolationBezierSecondDerivative(t : number, params: IBezierPar
 	return new Vec2(posX , posY);
 }
 
-export { IBezierParams, cubicInterpolationBezier, cubicInterpolationBezierFirstDerivative, cubicInterpolationBezierSecondDerivative };
+export { IBezierParams, DefaultBezierParams, cubicInterpolationBezier, cubicInterpolationBezierFirstDerivative, cubicInterpolationBezierSecondDerivative };

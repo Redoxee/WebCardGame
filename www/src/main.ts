@@ -2,8 +2,7 @@ import {Vec2, Vec3} from './vec';
 import {ICardElements, ICardPresentationOptions, addCardPresentationCapability, ICardPresentation} from './cardTool';
 import {setupSandboxCurves} from './curveSandbox';
 import {getElementBounds} from './domUtils';
-import { cubicInterpolationBezier, cubicInterpolationBezierFirstDerivative } from './math';
-import { stringify } from 'uuid';
+import { cubicInterpolationBezier, cubicInterpolationBezierFirstDerivative, DefaultBezierParams, IBezierParams } from './math';
 
 const container = document.getElementById('container')!;
 const card = document.getElementById('card')!;
@@ -116,61 +115,76 @@ function getBezierParams(distance : number) {
 	}
 }
 
-function lerpCardElement(target : ICardPresentation, t : number, p0 : Vec2, p1 : Vec2) {
-	if (Vec2.equal(p0, p1)) {
-		return;
-	}
-	
-	const travel = Vec2.sub(p1, p0);
-	console.log(`${p0} - ${p1} = ${travel}` );
-	const bezierParams = getBezierParams(travel.length());
-	const direction = travel.norm();
-	const transformedTime = cubicInterpolationBezier(t, bezierParams);
-
-	const currentPos = Vec2.add(p0, travel.scale(transformedTime.y));
-	target.root.style.left = `${currentPos.x}px`;
-	target.root.style.top = `${currentPos.y}px`;
-	const transformedAcceleration = cubicInterpolationBezierFirstDerivative(t, bezierParams).scale(100);
-	target.setOrientation(direction.scale(transformedAcceleration.y));
-}
-
 class CardLerpAnimation {
 	p0 : Vec2;
 	p1 : Vec2;
+	speed : number;
 	duration : number;
 	endTime : number;
 	startTime : number;
+	rotationFactor : number;
 	target : ICardPresentation;
+	travel : Vec2;
+	bezierParams : IBezierParams;
+	direction : Vec2;
 
-	constructor(target : ICardPresentation, duration : number) {
+	constructor(target : ICardPresentation, speed : number, rotationFactor : number) {
 		this.target = target;
-		this.duration = duration * 1000;
+		this.speed = speed;
+		this.rotationFactor = rotationFactor;
+		this.duration = 0;
 		this.p0 = Vec2.Zero;
 		this.p1 = Vec2.Zero;
+		this.travel = Vec2.Zero;
 		this.endTime = 0;
 		this.startTime = -1;
+		this.bezierParams = DefaultBezierParams;
+		this.direction = Vec2.Zero;
 	};
 
 	playAnimation(p0 : Vec2, p1 : Vec2) {
 		this.p0 = p0;
 		this.p1 = p1;
+		const distance = (Vec2.sub(p1, p0).length());
+		this.duration = distance / this.speed;
+		console.log(this.duration);
 		this.startTime = performance.now();
 		this.endTime = this.startTime + this.duration;
+		this.travel = Vec2.sub(p1, p0);
+		this.direction = this.travel.norm();
+		this.bezierParams = getBezierParams(this.travel.length());
 		requestAnimationFrame(lerpCardAnimationCallback);
 	}
 };
 
-const testAnimation = new CardLerpAnimation(presentationCard, 2);
+const testAnimation = new CardLerpAnimation(presentationCard, .75, 150);
 
 function lerpCardAnimationCallback(timeStamp : number) {
+	const p1 = testAnimation.p1;
+	const target = testAnimation.target;
 	if (testAnimation.endTime < timeStamp || testAnimation.duration === 0)
 	{
-		// TODO FINISH Animation
+		target.root.style.left = `${p1.x}px`;
+		target.root.style.top = `${p1.y}px`;
+		target.setOrientation(Vec2.Zero);
 		return;
 	}
 
 	const t = (timeStamp - testAnimation.startTime) / testAnimation.duration;
-	lerpCardElement(testAnimation.target, t, testAnimation.p0, testAnimation.p1);
+	const p0 = testAnimation.p0;
+	const rotationFactor = testAnimation.rotationFactor;
+	const travel = testAnimation.travel;
+	const bezierParams = testAnimation.bezierParams;
+	
+	const direction = testAnimation.direction;
+	const transformedTime = cubicInterpolationBezier(t, bezierParams);
+
+	const currentPos = Vec2.add(p0, travel.scale(transformedTime.y));
+	target.root.style.left = `${currentPos.x}px`;
+	target.root.style.top = `${currentPos.y}px`;
+	const transformedAcceleration = cubicInterpolationBezierFirstDerivative(t, bezierParams).scale(rotationFactor);
+	target.setOrientation(direction.scale(transformedAcceleration.y));
+
 	requestAnimationFrame(lerpCardAnimationCallback);
 }
 

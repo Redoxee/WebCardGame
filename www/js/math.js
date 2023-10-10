@@ -1,4 +1,10 @@
 import { Vec2 } from './vec';
+const DefaultBezierParams = {
+    p1x: 0.5,
+    p1y: 0.5,
+    p2x: 0.5,
+    p2y: 0.5,
+};
 function cubicInterpolationBezier(t, params) {
     const tSquare = t * t;
     const tCube = tSquare * t;
@@ -23,4 +29,4 @@ function cubicInterpolationBezierSecondDerivative(t, params) {
     const posY = params.p1y * p1Factor + params.p2y * p2Factor + 6 * t;
     return new Vec2(posX, posY);
 }
-export { cubicInterpolationBezier, cubicInterpolationBezierFirstDerivative, cubicInterpolationBezierSecondDerivative };
+export { DefaultBezierParams, cubicInterpolationBezier, cubicInterpolationBezierFirstDerivative, cubicInterpolationBezierSecondDerivative };

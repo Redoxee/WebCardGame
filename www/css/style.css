@@ -8,6 +8,12 @@ body {
 	touch-action: manipulation;
 }
 
+#game-board {
+	width: 100%;
+	height: 100%;
+	border: solid 3px yellow;
+}
+
 #container {
 	width: 10em;
 	height: 10em;
