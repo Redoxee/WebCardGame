@@ -1,6 +1,7 @@
 import { Vec2, Vec3 } from './vec';
 import { addCardPresentationCapability } from './cardTool';
 import { getElementBounds } from './domUtils';
+const board = document.getElementById('game-board');
 const container = document.getElementById('container');
 const card = document.getElementById('card');
 const cardItem = document.getElementById('card-item');
@@ -21,53 +22,64 @@ const cardOptions = {
 };
 const presentationCard = addCardPresentationCapability(cardElements, cardOptions);
 let isDragging = false;
-function startMove() {
-    presentationCard.setZoom(2);
-    presentationCard.setSmoothOrientation(false);
-    isDragging = true;
-}
-function endMove() {
-    if (isDragging) {
-        presentationCard.setZoom(1);
+let isSelected = false;
+let startTouchTimeStamp = 0;
+const clickDragThreshold = 500;
+function startInput() {
+    if (isSelected) {
         presentationCard.setSmoothOrientation(true);
-        presentationCard.setOrientation(Vec2.Zero);
+        presentationCard.setZoom(1);
+    }
+    isSelected = false;
+    isDragging = true;
+    presentationCard.setSmoothOrientation(false);
+    startTouchTimeStamp = performance.now();
+}
+function endInput() {
+    const inputDuration = performance.now() - startTouchTimeStamp;
+    if (inputDuration < clickDragThreshold) {
+        isSelected = true;
+        presentationCard.setZoom(2);
+    }
+    if (isDragging) {
         isDragging = false;
     }
 }
 container.addEventListener('mousedown', (ev) => {
-    startMove();
+    startInput();
 });
 container.addEventListener('mouseup', (ev) => {
-    endMove();
+    endInput();
 });
 container.addEventListener('pointerleave', (ev) => {
-    endMove();
-});
-container.addEventListener('mousemove', (ev) => {
-    if (isDragging) {
-        const target = ev.target;
-        const targetRect = getElementBounds(target);
-        const evPosition = new Vec2(ev.clientX - targetRect.centerX, ev.clientY - targetRect.centerY);
-        presentationCard.setOrientation(evPosition);
+    if (isSelected) {
+        isSelected = false;
+        presentationCard.setZoom(1);
+        presentationCard.setOrientation(Vec2.Zero);
     }
 });
 container.addEventListener("touchstart", (ev) => {
-    startMove();
+    startInput();
 }, false);
 container.addEventListener("touchcancel", (ev) => {
-    endMove();
+    endInput();
 }, false);
 container.addEventListener("touchend", (ev) => {
-    endMove();
+    endInput();
 }, false);
-container.addEventListener('touchmove', (ev) => {
-    ev.preventDefault();
-    if (isDragging) {
-        const target = ev.target;
-        const targetRect = getElementBounds(target);
-        const evPosition = new Vec2(ev.touches[0].clientX - targetRect.centerX, ev.touches[0].clientY - targetRect.centerY);
+function cardMove(posX, posY) {
+    if (isSelected) {
+        const targetRect = getElementBounds(presentationCard);
+        const evPosition = new Vec2(posX - targetRect.centerX, posY - targetRect.centerY);
         presentationCard.setOrientation(evPosition);
     }
+}
+container.addEventListener('mousemove', (ev) => {
+    cardMove(ev.clientX, ev.clientY);
+});
+container.addEventListener('touchmove', (ev) => {
+    const target = ev.touches[0];
+    cardMove(target.clientX, target.clientY);
 });
 presentationCard.setOrientation(Vec2.Zero);
 const testButton = document.getElementById('test-button');
@@ -82,5 +94,32 @@ testButton.addEventListener('click', (_ev) => {
     currentIndex = (currentIndex + 1) % targets.length;
     const startPosition = getElementBounds(presentationCard.root);
     const targetPosition = getElementBounds(targets[currentIndex]);
-    presentationCard.lerpAnimator.startAnimation(new Vec2(startPosition.centerX, startPosition.centerY), new Vec2(targetPosition.centerX, targetPosition.centerY));
+    presentationCard.lerpAnimator.startAnimation(new Vec2(startPosition.centerX, startPosition.centerY), new Vec2(targetPosition.centerX, targetPosition.centerY), 1, {
+        p1x: 0.32,
+        p1y: 0.0,
+        p2x: 0.5,
+        p2y: 1
+    });
 });
+function boardMove(posX, posY) {
+    const startPosition = getElementBounds(presentationCard.root);
+    const targetPosition = getElementBounds(targets[currentIndex]);
+    presentationCard.lerpAnimator.startAnimation(new Vec2(startPosition.centerX, startPosition.centerY), new Vec2(posX, posY), 2, {
+        p1x: .32,
+        p1y: .32,
+        p2x: .75,
+        p2y: .75
+    });
+}
+board.addEventListener('mousemove', (event) => {
+    if (isDragging) {
+        boardMove(event.clientX, event.clientY);
+    }
+});
+board.addEventListener('touchmove', (event) => {
+    if (isDragging) {
+        const target = event.targetTouches[0];
+        boardMove(target.clientX, target.clientY - 150);
+    }
+});
+//setupSandboxCurves(presentationCard.lerpAnimator.getBezierParams(1));

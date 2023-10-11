@@ -4,6 +4,7 @@ import {setupSandboxCurves} from './curveSandbox';
 import {getElementBounds} from './domUtils';
 import { cubicInterpolationBezier, cubicInterpolationBezierFirstDerivative, DefaultBezierParams, IBezierParams } from './math';
 
+const board = document.getElementById('game-board')!;
 const container = document.getElementById('container')!;
 const card = document.getElementById('card')!;
 const cardItem = document.getElementById('card-item')!;
@@ -28,69 +29,81 @@ const cardOptions : ICardPresentationOptions = {
 const presentationCard = addCardPresentationCapability(cardElements, cardOptions);
 
 let isDragging = false;
+let isSelected = false;
+let startTouchTimeStamp = 0;
 
-function startMove() {
-	presentationCard.setZoom(2);
+const clickDragThreshold = 500;
+
+function startInput() {
+	if(isSelected) {
+		presentationCard.setSmoothOrientation(true);
+		presentationCard.setZoom(1);
+	}
+
+	isSelected = false;
+	isDragging = true;
 	
 	presentationCard.setSmoothOrientation(false);
 	
-	isDragging = true;
+	startTouchTimeStamp = performance.now();
 }
 
-function endMove() {
+function endInput() {
+	const inputDuration = performance.now() - startTouchTimeStamp;
+	if(inputDuration < clickDragThreshold) {
+		isSelected = true;
+		presentationCard.setZoom(2);
+	}
+
 	if (isDragging) {
-		presentationCard.setZoom(1);
-		
-		presentationCard.setSmoothOrientation(true);
-		
-		presentationCard.setOrientation(Vec2.Zero);
 		isDragging = false;
 	}
 }
 
 container.addEventListener('mousedown', (ev)=>{
-	startMove();
+	startInput();
 });
 
 container.addEventListener('mouseup', (ev)=>{
-	endMove();
+	endInput();
 });
 
 container.addEventListener('pointerleave', (ev)=> {
-	endMove();
-});
-
-container.addEventListener('mousemove', (ev)=> {
-	if (isDragging) {
-		const target = ev.target! as HTMLElement;
-		const targetRect = getElementBounds(target);
-		const evPosition = new Vec2(ev.clientX - targetRect.centerX, ev.clientY - targetRect.centerY);
-		presentationCard.setOrientation(evPosition);
+	if (isSelected) {
+		isSelected = false;
+		presentationCard.setZoom(1);
+		presentationCard.setOrientation(Vec2.Zero);
 	}
 });
 
 container.addEventListener("touchstart", (ev)=>{
-	startMove();
+	startInput();
 }, false);
 
 container.addEventListener("touchcancel", (ev)=>{
-	endMove();
+	endInput();
 }, false);
 
 container.addEventListener("touchend", (ev)=>{
-	endMove();
+	endInput();
 }, false);
 
-container.addEventListener('touchmove',(ev)=>{
-	ev.preventDefault();
-	if(isDragging)
-	{
-		const target = ev.target! as HTMLElement;
-		const targetRect = getElementBounds(target);
 
-		const evPosition = new Vec2(ev.touches[0].clientX - targetRect.centerX, ev.touches[0].clientY - targetRect.centerY);
+function cardMove(posX : number, posY : number) {
+	if (isSelected) {
+		const targetRect = getElementBounds(presentationCard);
+		const evPosition = new Vec2(posX - targetRect.centerX, posY - targetRect.centerY);
 		presentationCard.setOrientation(evPosition);
 	}
+}
+
+container.addEventListener('mousemove', (ev)=> {
+	cardMove(ev.clientX, ev.clientY);
+});
+
+container.addEventListener('touchmove', (ev)=> {
+	const target = ev.touches[0];
+	cardMove(target.clientX, target.clientY);
 });
 
 presentationCard.setOrientation(Vec2.Zero);
@@ -111,5 +124,42 @@ testButton.addEventListener('click', (_ev)=>{
 	const targetPosition = getElementBounds(targets[currentIndex]);
 	presentationCard.lerpAnimator.startAnimation(
 		new Vec2(startPosition.centerX, startPosition.centerY),
-		new Vec2(targetPosition.centerX, targetPosition.centerY));
+		new Vec2(targetPosition.centerX, targetPosition.centerY),
+		1,
+		{
+			p1x : 0.32, 
+			p1y : 0.0, 
+			p2x : 0.5, 
+			p2y : 1}
+		);
 });
+
+function boardMove(posX : number, posY : number) {
+	const startPosition = getElementBounds(presentationCard.root)
+	const targetPosition = getElementBounds(targets[currentIndex]);
+	presentationCard.lerpAnimator.startAnimation(
+		new Vec2(startPosition.centerX, startPosition.centerY),
+		new Vec2(posX, posY),
+		2,
+		{
+			p1x : .32,
+			p1y : .32,
+			p2x : .75,
+			p2y : .75
+		});
+}
+
+board.addEventListener('mousemove', (event)=>{
+	if(isDragging) {
+		boardMove(event.clientX , event.clientY);
+	}
+});
+
+board.addEventListener('touchmove', (event)=>{
+	if(isDragging) {
+		const target = event.targetTouches[0];
+		boardMove(target.clientX, target.clientY - 150);
+	}
+});
+
+//setupSandboxCurves(presentationCard.lerpAnimator.getBezierParams(1));
