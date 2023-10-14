@@ -14,7 +14,7 @@ body {
 	border: solid 3px yellow;
 }
 
-#container {
+#card-root {
 	width: 10em;
 	height: 10em;
 	border: solid whitesmoke;

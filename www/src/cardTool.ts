@@ -1,6 +1,6 @@
 import {Vec2, Vec3} from './vec';
 import {addCustomStyle} from './domUtils';
-import {IBezierParams, DefaultBezierParams, cubicInterpolationBezier, cubicInterpolationBezierFirstDerivative} from './math';
+import {IBezierParams, BezierPreset, cubicInterpolationBezier, cubicInterpolationBezierFirstDerivative} from './math';
 
 function rotatePitchRoll(vec : Vec3, pitch : number, roll : number) {
 	const cp = Math.cos(pitch);
@@ -36,13 +36,16 @@ interface ICardPresentation extends HTMLElement {
 
 let lastFrameTimeStamp = 0;
 let frameDelay = 0;
-let tempCardAnimation : CardLerpAnimation|null;
+const cardAnimations : CardLerpAnimation[] = [] ;
 
 function cardAnimationCallback(timeStamp : number) {
 	const currentFrameTimeStamp = performance.now();
 	frameDelay = currentFrameTimeStamp - lastFrameTimeStamp;
 	lastFrameTimeStamp = currentFrameTimeStamp;
-	tempCardAnimation?.animationFrame(timeStamp);
+	cardAnimations.forEach(element => {
+		element.animationFrame(frameDelay);
+	});
+	
 	requestAnimationFrame(cardAnimationCallback);
 }
 
@@ -71,7 +74,7 @@ class CardLerpAnimation {
 		this.endTime = 0;
 		this.elapsedTime = 0;
 		this.startTime = -1;
-		this.bezierParams = DefaultBezierParams;
+		this.bezierParams = BezierPreset.DefaultBezierParams;
 		this.direction = Vec2.Zero;
 	};
 
@@ -80,7 +83,6 @@ class CardLerpAnimation {
 		this.p1 = p1;
 		const distance = (Vec2.sub(p1, p0).length());
 		this.duration = distance / speed;
-		console.log(this.duration);
 		this.startTime = performance.now() - frameDelay;
 		this.endTime = this.startTime + this.duration;
 		this.elapsedTime = 0;
@@ -88,20 +90,19 @@ class CardLerpAnimation {
 		this.direction = this.travel.norm();
 		this.bezierParams = bezierParams;
 
-		tempCardAnimation = this;
+		if (!cardAnimations.find((e)=>e === this)) {
+			cardAnimations.push(this);
+		}
 	}
 
 	animationFrame(dt : number) {
-		
-		this.elapsedTime += frameDelay;
-		console.log(frameDelay);
-		console.log('frame');
+		this.elapsedTime += dt;
 		if (this.elapsedTime > this.duration || this.duration === 0)
 		{
 			this.target.root.style.left = `${this.p1.x}px`;
 			this.target.root.style.top = `${this.p1.y}px`;
 			this.target.setOrientation(Vec2.Zero);
-			tempCardAnimation = null;
+			cardAnimations.splice(cardAnimations.findIndex((e)=>e === this), 1);
 			return;
 		}
 	
@@ -172,7 +173,7 @@ function addCardPresentationCapability(cardElements : ICardElements, options : I
 		}
 	}
 
-	card.lerpAnimator = new CardLerpAnimation(card, .75);
+	card.lerpAnimator = new CardLerpAnimation(card, 100);
 
 	return card;
 }

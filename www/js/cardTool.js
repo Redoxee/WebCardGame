@@ -1,6 +1,6 @@
 import { Vec2, Vec3 } from './vec';
 import { addCustomStyle } from './domUtils';
-import { DefaultBezierParams, cubicInterpolationBezier, cubicInterpolationBezierFirstDerivative } from './math';
+import { BezierPreset, cubicInterpolationBezier, cubicInterpolationBezierFirstDerivative } from './math';
 function rotatePitchRoll(vec, pitch, roll) {
     const cp = Math.cos(pitch);
     const sp = Math.sin(pitch);
@@ -10,12 +10,14 @@ function rotatePitchRoll(vec, pitch, roll) {
 }
 let lastFrameTimeStamp = 0;
 let frameDelay = 0;
-let tempCardAnimation;
+const cardAnimations = [];
 function cardAnimationCallback(timeStamp) {
     const currentFrameTimeStamp = performance.now();
     frameDelay = currentFrameTimeStamp - lastFrameTimeStamp;
     lastFrameTimeStamp = currentFrameTimeStamp;
-    tempCardAnimation === null || tempCardAnimation === void 0 ? void 0 : tempCardAnimation.animationFrame(timeStamp);
+    cardAnimations.forEach(element => {
+        element.animationFrame(frameDelay);
+    });
     requestAnimationFrame(cardAnimationCallback);
 }
 cardAnimationCallback(performance.now());
@@ -30,7 +32,7 @@ class CardLerpAnimation {
         this.endTime = 0;
         this.elapsedTime = 0;
         this.startTime = -1;
-        this.bezierParams = DefaultBezierParams;
+        this.bezierParams = BezierPreset.DefaultBezierParams;
         this.direction = Vec2.Zero;
     }
     ;
@@ -39,24 +41,23 @@ class CardLerpAnimation {
         this.p1 = p1;
         const distance = (Vec2.sub(p1, p0).length());
         this.duration = distance / speed;
-        console.log(this.duration);
         this.startTime = performance.now() - frameDelay;
         this.endTime = this.startTime + this.duration;
         this.elapsedTime = 0;
         this.travel = Vec2.sub(p1, p0);
         this.direction = this.travel.norm();
         this.bezierParams = bezierParams;
-        tempCardAnimation = this;
+        if (!cardAnimations.find((e) => e === this)) {
+            cardAnimations.push(this);
+        }
     }
     animationFrame(dt) {
-        this.elapsedTime += frameDelay;
-        console.log(frameDelay);
-        console.log('frame');
+        this.elapsedTime += dt;
         if (this.elapsedTime > this.duration || this.duration === 0) {
             this.target.root.style.left = `${this.p1.x}px`;
             this.target.root.style.top = `${this.p1.y}px`;
             this.target.setOrientation(Vec2.Zero);
-            tempCardAnimation = null;
+            cardAnimations.splice(cardAnimations.findIndex((e) => e === this), 1);
             return;
         }
         const t = this.elapsedTime / this.duration;
@@ -112,7 +113,7 @@ function addCardPresentationCapability(cardElements, options) {
             }
         }
     };
-    card.lerpAnimator = new CardLerpAnimation(card, .75);
+    card.lerpAnimator = new CardLerpAnimation(card, 100);
     return card;
 }
 export { addCardPresentationCapability };

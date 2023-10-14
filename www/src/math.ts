@@ -7,11 +7,29 @@ interface IBezierParams {
 	p2y: number,
 }
 
-const DefaultBezierParams = {
-	p1x : 0.5,
-	p1y : 0.5,
-	p2x : 0.5,
-	p2y : 0.5,
+class BezierPreset{
+	static EaseInOut : IBezierParams = 
+	{
+		p1x : 0.32, 
+		p1y : 0.0, 
+		p2x : 0.5, 
+		p2y : 1
+	}
+
+	static Linear : IBezierParams = 
+	{
+		p1x : .32,
+		p1y : .32,
+		p2x : .75,
+		p2y : .75
+	};
+
+	static DefaultBezierParams = {
+		p1x : 0.5,
+		p1y : 0.5,
+		p2x : 0.5,
+		p2y : 0.5,
+	};
 }
 
 function cubicInterpolationBezier(t : number, params : IBezierParams) : Vec2{
@@ -41,4 +59,4 @@ function cubicInterpolationBezierSecondDerivative(t : number, params: IBezierPar
 	return new Vec2(posX , posY);
 }
 
-export { IBezierParams, DefaultBezierParams, cubicInterpolationBezier, cubicInterpolationBezierFirstDerivative, cubicInterpolationBezierSecondDerivative };
+export { IBezierParams, BezierPreset, cubicInterpolationBezier, cubicInterpolationBezierFirstDerivative, cubicInterpolationBezierSecondDerivative };
