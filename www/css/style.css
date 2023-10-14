@@ -8,7 +8,13 @@ body {
 	touch-action: manipulation;
 }
 
-#container {
+#game-board {
+	width: 100%;
+	height: 100%;
+	border: solid 3px yellow;
+}
+
+#card-root {
 	width: 10em;
 	height: 10em;
 	border: solid whitesmoke;
