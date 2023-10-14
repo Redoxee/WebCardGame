@@ -2,99 +2,129 @@ import {Vec2, Vec3} from './vec';
 import {ICardElements, ICardPresentationOptions, addCardPresentationCapability, ICardPresentation} from './cardTool';
 import {setupSandboxCurves} from './curveSandbox';
 import {getElementBounds} from './domUtils';
-import { cubicInterpolationBezier, cubicInterpolationBezierFirstDerivative } from './math';
-import { stringify } from 'uuid';
+import {v4 as uuid} from 'uuid';
+import { cubicInterpolationBezier, cubicInterpolationBezierFirstDerivative, BezierPreset, IBezierParams } from './math';
 
-const container = document.getElementById('container')!;
-const card = document.getElementById('card')!;
-const cardItem = document.getElementById('card-item')!;
-const shine = document.getElementById('shine')!;
-const shade = document.getElementById('unshine')!;
+const board = document.getElementById('game-board')!;
+const container = document.getElementById('card-root')!;
 
-const cardElements : ICardElements = {
-	root : container,
-	zoomable : card,
-	cardItem : cardItem,
-	shine : shine,
-	shade : shade,
-};
+function makeCard(rootNode : HTMLElement) : ICardPresentation {
+	const cardClassName = `PresentationCard${uuid()}`;
+	rootNode.classList.add(cardClassName);
+	const card = document.querySelector(`.${cardClassName} #card`)! as HTMLElement;
+	const cardItem = document.querySelector(`.${cardClassName} #card-item`)! as HTMLElement;
+	const shine = document.querySelector(`.${cardClassName} #shine`)! as HTMLElement;
+	const shade = document.querySelector(`.${cardClassName} #shade`)! as HTMLElement;
+	
+	const cardElements : ICardElements = {
+		root : rootNode,
+		zoomable : card,
+		cardItem : cardItem,
+		shine : shine,
+		shade : shade,
+	};
+	
+	const cardOptions : ICardPresentationOptions = {
+		lightDirection : (new Vec3(.15, -1, .25)).normalize(),
+		simHeight : 190, 
+		lightPower : 1.5,
+		shadowDistance : 5
+	};
+	
+	const presentationCard = addCardPresentationCapability(cardElements, cardOptions);
+	return presentationCard;
+}
 
-const cardOptions : ICardPresentationOptions = {
-	lightDirection : (new Vec3(.15, -1, .25)).normalize(),
-	simHeight : 190, 
-	lightPower : 1.5,
-	shadowDistance : 5
-};
+const presentationCard = makeCard(container);
 
-const presentationCard = addCardPresentationCapability(cardElements, cardOptions);
+let draggedObject : ICardPresentation | null = null;
+let isSelected = false;
+let startTouchTimeStamp = 0;
 
-let isDragging = false;
+const clickDragThreshold = 500;
 
-function startMove() {
-	presentationCard.setZoom(2);
+function startInput(card : ICardPresentation) {
+	if(isSelected) {
+		presentationCard.setSmoothOrientation(true);
+		presentationCard.setZoom(1);
+	}
+
+	draggedObject = card;
 	
 	presentationCard.setSmoothOrientation(false);
 	
-	isDragging = true;
+	startTouchTimeStamp = performance.now();
 }
 
-function endMove() {
-	if (isDragging) {
-		presentationCard.setZoom(1);
-		
-		presentationCard.setSmoothOrientation(true);
-		
-		presentationCard.setOrientation(Vec2.Zero);
-		isDragging = false;
+function endInput() {
+	const inputDuration = performance.now() - startTouchTimeStamp;
+	if(inputDuration < clickDragThreshold) {
+		if(!isSelected)
+		{
+			isSelected = true;
+			presentationCard.setZoom(2);
+		}
+		else {
+			isSelected = false;
+			presentationCard.setZoom(1);
+		}
+	}
+
+	if (draggedObject) {
+		draggedObject = null;
 	}
 }
 
-container.addEventListener('mousedown', (ev)=>{
-	startMove();
-});
-
-container.addEventListener('mouseup', (ev)=>{
-	endMove();
-});
-
-container.addEventListener('pointerleave', (ev)=> {
-	endMove();
-});
-
-container.addEventListener('mousemove', (ev)=> {
-	if (isDragging) {
-		const target = ev.target! as HTMLElement;
-		const targetRect = getElementBounds(target);
-		const evPosition = new Vec2(ev.clientX - targetRect.centerX, ev.clientY - targetRect.centerY);
-		presentationCard.setOrientation(evPosition);
+function cardFollowPosition(card : ICardPresentation,posX : number, posY : number) {
+	if (isSelected) {
+		const targetRect = getElementBounds(presentationCard);
+		const evPosition = new Vec2(posX - targetRect.centerX, posY - targetRect.centerY);
+		card.setOrientation(evPosition);
 	}
-});
+}
 
-container.addEventListener("touchstart", (ev)=>{
-	startMove();
-}, false);
+function setupCardInput(targetCard : ICardPresentation) {
 
-container.addEventListener("touchcancel", (ev)=>{
-	endMove();
-}, false);
+	targetCard.root.addEventListener('mousedown', (_)=>{
+		startInput(targetCard);
+	});
+	
+	targetCard.root.addEventListener('mouseup', (_)=>{
+		//endInput();
+	});
+	
+	targetCard.root.addEventListener('pointerleave', (_)=> {
+		if (isSelected) {
+			isSelected = false;
+			targetCard.setZoom(1);
+			targetCard.setOrientation(Vec2.Zero);
+		}
+	});
+	
+	targetCard.root.addEventListener("touchstart", (ev)=>{
+		const target = ev.target as ICardPresentation;
+		startInput(target);
+	}, false);
+	
+	targetCard.root.addEventListener("touchcancel", (ev)=>{
+		endInput();
+	}, false);
+	
+	targetCard.root.addEventListener("touchend", (ev)=>{
+		endInput();
+	}, false);
+	
+	targetCard.root.addEventListener('mousemove', (ev)=> {
+		cardFollowPosition(targetCard, ev.clientX, ev.clientY);
+	});
+	
+	targetCard.root.addEventListener('touchmove', (ev)=> {
+		const positionHolder = ev.targetTouches[0];
+		cardFollowPosition(targetCard, positionHolder.clientX, positionHolder.clientY);
+	});
+}
 
-container.addEventListener("touchend", (ev)=>{
-	endMove();
-}, false);
-
-container.addEventListener('touchmove',(ev)=>{
-	ev.preventDefault();
-	if(isDragging)
-	{
-		const target = ev.target! as HTMLElement;
-		const targetRect = getElementBounds(target);
-
-		const evPosition = new Vec2(ev.touches[0].clientX - targetRect.centerX, ev.touches[0].clientY - targetRect.centerY);
-		presentationCard.setOrientation(evPosition);
-	}
-});
-
-presentationCard.setOrientation(Vec2.Zero);
+setupCardInput(presentationCard);
 
 const testButton = document.getElementById('test-button') as HTMLButtonElement;
 const targets = [
@@ -106,79 +136,76 @@ const targets = [
 
 let currentIndex = 0;
 
-
-function getBezierParams(distance : number) {
-	return {
-		p1x : .32,
-		p1y : .0,
-		p2x : .5,
-		p2y : 1
-	}
-}
-
-function lerpCardElement(target : ICardPresentation, t : number, p0 : Vec2, p1 : Vec2) {
-	if (Vec2.equal(p0, p1)) {
-		return;
-	}
-	
-	const travel = Vec2.sub(p1, p0);
-	console.log(`${p0} - ${p1} = ${travel}` );
-	const bezierParams = getBezierParams(travel.length());
-	const direction = travel.norm();
-	const transformedTime = cubicInterpolationBezier(t, bezierParams);
-
-	const currentPos = Vec2.add(p0, travel.scale(transformedTime.y));
-	target.root.style.left = `${currentPos.x}px`;
-	target.root.style.top = `${currentPos.y}px`;
-	const transformedAcceleration = cubicInterpolationBezierFirstDerivative(t, bezierParams).scale(100);
-	target.setOrientation(direction.scale(transformedAcceleration.y));
-}
-
-class CardLerpAnimation {
-	p0 : Vec2;
-	p1 : Vec2;
-	duration : number;
-	endTime : number;
-	startTime : number;
-	target : ICardPresentation;
-
-	constructor(target : ICardPresentation, duration : number) {
-		this.target = target;
-		this.duration = duration * 1000;
-		this.p0 = Vec2.Zero;
-		this.p1 = Vec2.Zero;
-		this.endTime = 0;
-		this.startTime = -1;
-	};
-
-	playAnimation(p0 : Vec2, p1 : Vec2) {
-		this.p0 = p0;
-		this.p1 = p1;
-		this.startTime = performance.now();
-		this.endTime = this.startTime + this.duration;
-		requestAnimationFrame(lerpCardAnimationCallback);
-	}
-};
-
-const testAnimation = new CardLerpAnimation(presentationCard, 2);
-
-function lerpCardAnimationCallback(timeStamp : number) {
-	if (testAnimation.endTime < timeStamp || testAnimation.duration === 0)
-	{
-		// TODO FINISH Animation
-		return;
-	}
-
-	const t = (timeStamp - testAnimation.startTime) / testAnimation.duration;
-	lerpCardElement(testAnimation.target, t, testAnimation.p0, testAnimation.p1);
-	requestAnimationFrame(lerpCardAnimationCallback);
-}
-
 testButton.addEventListener('click', (_ev)=>{
 	currentIndex = (currentIndex + 1) % targets.length;
 	const startPosition = getElementBounds(presentationCard.root)
 	const targetPosition = getElementBounds(targets[currentIndex]);
-	testAnimation.playAnimation(
+	presentationCard.lerpAnimator.startAnimation(
 		new Vec2(startPosition.centerX, startPosition.centerY),
-		new Vec2(targetPosition.centerX, targetPosition.centerY));
+		new Vec2(targetPosition.centerX, targetPosition.centerY),
+		.65,
+		BezierPreset.EaseInOut
+	);
 });
+
+function boardMove(card : ICardPresentation,posX : number, posY : number) {
+	const startPosition = getElementBounds(card.root);
+	const start = new Vec2(startPosition.centerX, startPosition.centerY);
+	const end = new Vec2(posX, posY);
+
+	const travelLength = Vec2.sub(end, start).length();
+
+	const lerpLowerBound = 45;
+	const lerpUpperBound = 180;
+	const minSpeed = .8;
+	const maxSpeed = 2.7;
+
+	// Computing the distance versus the lower upper bound (if distance is low keep the low speed, speedup as distance is high)
+	let lp = (travelLength - lerpLowerBound) / (lerpUpperBound - lerpLowerBound);
+	
+	// clamping between 0 and 1
+	if (lp < 0) {
+		lp = 0;
+	} else if (lp > 1) {
+		lp = 1;
+	}
+
+	// Applying a ramp
+	lp = lp * lp;
+	// converting to speed
+	const lerpedSpeed = (maxSpeed - minSpeed) * lp + minSpeed;
+
+	card.lerpAnimator.startAnimation(
+		start,
+		end,
+		lerpedSpeed,
+		BezierPreset.Linear);
+}
+
+board.addEventListener('mousemove', (event)=>{
+	if(draggedObject) {
+		boardMove(draggedObject, event.clientX , event.clientY);
+	}
+});
+
+board.addEventListener('touchmove', (event)=>{
+	if(draggedObject) {
+		const target = event.targetTouches[0];
+		boardMove(draggedObject, target.clientX, target.clientY - 150);
+	}
+});
+
+board.addEventListener('mouseup', ()=>{
+	endInput();
+});
+
+const cloned = container.cloneNode(true) as HTMLElement;
+board.appendChild(cloned);
+
+const clonedCard = makeCard(cloned);
+setupCardInput(clonedCard);
+
+const clonedBound = getElementBounds(cloned);
+clonedCard.lerpAnimator.startAnimation(new Vec2(clonedBound.centerX, clonedBound.centerY), new Vec2(600, 300), .5, BezierPreset.EaseInOut)
+
+//setupSandboxCurves(presentationCard.lerpAnimator.getBezierParams(1));

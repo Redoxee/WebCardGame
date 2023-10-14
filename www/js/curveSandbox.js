@@ -1,6 +1,6 @@
 import { cubicInterpolationBezier, cubicInterpolationBezierFirstDerivative } from "./math";
 import { addCustomStyle } from './domUtils';
-function setupSandboxCurves() {
+function setupSandboxCurves(bezierParams) {
     const sandboxDiv = document.createElement('div');
     sandboxDiv.id = 'curve-sandbox';
     addCustomStyle({
@@ -48,7 +48,7 @@ function setupSandboxCurves() {
     speedLine.style.stroke = "yellow";
     speedLine.style.fill = "transparent";
     speedLine.style.strokeWidth = "1px";
-    const bezier = { p1x: 0.98, p1y: 0.86, p2x: 0.61, p2y: 1 };
+    const bezier = bezierParams;
     function renderCurve() {
         curveLine.points.clear();
         speedLine.points.clear();
