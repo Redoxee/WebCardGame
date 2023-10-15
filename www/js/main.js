@@ -26,6 +26,7 @@ function makeCard(rootNode) {
         shadowDistance: 5
     };
     const presentationCard = addCardPresentationCapability(cardElements, cardOptions);
+    presentationCard.setOrientation(Vec2.Zero);
     return presentationCard;
 }
 const presentationCard = makeCard(container);

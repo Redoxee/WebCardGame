@@ -31,23 +31,51 @@
 			top: 40em;
 			left: 20em;
 		}
+
+		#mock-collection {
+			width: 500pt;
+			height: 100pt;
+			border: solid white;
+
+			display: flex;
+			flex-direction: row;
+			justify-content: space-between;
+			align-items: center;
+		}
+
+		.mock-card {
+			width: 5em;
+			height: 7em;
+			background-color: aqua;
+			border: solid lightgreen;
+		}
+
 	</style>
 	<body>
 		<div id="game-board">
+
+			<div class="collection" id ="mock-collection">
+				<div class="mock-card"></div>
+				<div class="mock-card"></div>
+				<div class="mock-card"></div>
+				<div class="mock-card"></div>
+			</div>
+
 			<div id="target-1" class="target"></div>
 			<div id="target-2" class="target"></div>
 			<div id="target-3" class="target"></div>
 			<div id="target-4" class="target"></div>
 
 			<button id="test-button">TEST</button>
-		<div id='card-root'>
-			<div id="card">
-				<div id = 'card-item'>
-					<img id="card-bg" class="overlay" src="medias/textures/CardBackground.png"></img>
-					<img id='illustration' class="card-illustration" src="medias/textures/TestImage.png"></img>
-					<img id="card-bg" class="overlay" src="medias/textures/CardFrame.png"></img>
-					<img id='shine' class="overlay" src="medias/textures/CardShine.png"></img>
-					<img id='shade' class="overlay" src="medias/textures/CardShadow.png"></img>
+			<div id='card-root'>
+				<div id="card">
+					<div id = 'card-item'>
+						<img id="card-bg" class="overlay" src="medias/textures/CardBackground.png"></img>
+						<img id='illustration' class="card-illustration" src="medias/textures/TestImage.png"></img>
+						<img id="card-bg" class="overlay" src="medias/textures/CardFrame.png"></img>
+						<img id='shine' class="overlay" src="medias/textures/CardShine.png"></img>
+						<img id='shade' class="overlay" src="medias/textures/CardShadow.png"></img>
+					</div>
 				</div>
 			</div>
 		</div>

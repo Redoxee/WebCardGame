@@ -15,7 +15,7 @@ function makeCard(rootNode : HTMLElement) : ICardPresentation {
 	const cardItem = document.querySelector(`.${cardClassName} #card-item`)! as HTMLElement;
 	const shine = document.querySelector(`.${cardClassName} #shine`)! as HTMLElement;
 	const shade = document.querySelector(`.${cardClassName} #shade`)! as HTMLElement;
-	
+
 	const cardElements : ICardElements = {
 		root : rootNode,
 		zoomable : card,
@@ -32,6 +32,7 @@ function makeCard(rootNode : HTMLElement) : ICardPresentation {
 	};
 	
 	const presentationCard = addCardPresentationCapability(cardElements, cardOptions);
+	presentationCard.setOrientation(Vec2.Zero);
 	return presentationCard;
 }
 
@@ -208,4 +209,56 @@ setupCardInput(clonedCard);
 const clonedBound = getElementBounds(cloned);
 clonedCard.lerpAnimator.startAnimation(new Vec2(clonedBound.centerX, clonedBound.centerY), new Vec2(600, 300), .5, BezierPreset.EaseInOut)
 
-//setupSandboxCurves(presentationCard.lerpAnimator.getBezierParams(1));
+const cardCollection = document.getElementById('mock-collection')!;
+
+interface ICardCollectionItem extends HTMLElement {
+
+}
+
+type SlotIndexSelector = (availableSlots : ICardCollectionItem[]) => Number;
+
+interface ICardCollection extends HTMLElement {
+	itemPool : ICardCollectionItem[];
+	itemInUse : ICardCollectionItem[];
+	cardItems : ICardPresentation|null[];
+	isReserving : boolean;
+
+	ReserveSlot : (selector : SlotIndexSelector)=>void;
+}
+
+function setupCardCollection(collectionELement : HTMLElement) {
+	const cardCollection = collectionELement as ICardCollection;
+
+	const itemPoolSize = 30;
+
+	cardCollection.itemPool = [];
+	cardCollection.cardItems = [];
+	cardCollection.itemInUse = [];
+	cardCollection.isReserving = false;
+
+	for (let index = 0; index < itemPoolSize; ++index) {
+		const pooledItem = document.createElement('div') as ICardCollectionItem;
+		cardCollection.itemPool.push(pooledItem)
+	}
+
+	cardCollection.ReserveSlot = (selector : SlotIndexSelector) => {
+		if (!cardCollection.isReserving) {
+			const newItem = cardCollection.itemPool.pop()!;
+			cardCollection.appendChild(newItem);
+			cardCollection.itemInUse.push(newItem);
+		}
+
+		cardCollection.isReserving = true;
+		// determine the slot index
+		const reservingIndex = selector(cardCollection.itemInUse);
+		for(let index = cardCollection.itemInUse.length - 1; index > reservingIndex; --index) {
+			cardCollection.itemInUse[index] = cardCollection.itemInUse[index - 1];
+		}
+
+		// TODO : Attach cards to slots
+	};
+
+	return cardCollection;
+}
+
+setupCardCollection(cardCollection);
