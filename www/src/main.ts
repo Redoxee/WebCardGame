@@ -1,7 +1,7 @@
 import {Vec2, Vec3} from './vec';
 import {ICardElements, ICardPresentationOptions, addCardPresentationCapability, ICardPresentation} from './cardTool';
 import {setupSandboxCurves} from './curveSandbox';
-import {getElementBounds} from './domUtils';
+import {addCustomStyle, getElementBounds} from './domUtils';
 import {v4 as uuid} from 'uuid';
 import { cubicInterpolationBezier, cubicInterpolationBezierFirstDerivative, BezierPreset, IBezierParams } from './math';
 
@@ -209,21 +209,23 @@ setupCardInput(clonedCard);
 const clonedBound = getElementBounds(cloned);
 clonedCard.lerpAnimator.startAnimation(new Vec2(clonedBound.centerX, clonedBound.centerY), new Vec2(600, 300), .5, BezierPreset.EaseInOut)
 
-const cardCollection = document.getElementById('mock-collection')!;
+const cardCollectionElement = document.getElementById('mock-collection')!;
 
-interface ICardCollectionItem extends HTMLElement {
-
+interface ICardCollectionItem extends HTMLDivElement {
+	assignedCard : ICardPresentation|null;
 }
 
-type SlotIndexSelector = (availableSlots : ICardCollectionItem[]) => Number;
+type SlotIndexSelector = (availableSlots : ICardCollectionItem[]) => number;
 
 interface ICardCollection extends HTMLElement {
 	itemPool : ICardCollectionItem[];
 	itemInUse : ICardCollectionItem[];
 	cardItems : ICardPresentation|null[];
-	isReserving : boolean;
+	reservingItem : ICardCollectionItem|null;
 
 	ReserveSlot : (selector : SlotIndexSelector)=>void;
+	CancelReservation : ()=>void;
+	AssignCardToReservation : (card : ICardPresentation)=>void;
 }
 
 function setupCardCollection(collectionELement : HTMLElement) {
@@ -234,31 +236,88 @@ function setupCardCollection(collectionELement : HTMLElement) {
 	cardCollection.itemPool = [];
 	cardCollection.cardItems = [];
 	cardCollection.itemInUse = [];
-	cardCollection.isReserving = false;
+	cardCollection.reservingItem = null;
 
 	for (let index = 0; index < itemPoolSize; ++index) {
-		const pooledItem = document.createElement('div') as ICardCollectionItem;
+		const pooledItem = document.createElement('div')!as ICardCollectionItem;
 		cardCollection.itemPool.push(pooledItem)
 	}
 
 	cardCollection.ReserveSlot = (selector : SlotIndexSelector) => {
-		if (!cardCollection.isReserving) {
+		if (!cardCollection.reservingItem) {
 			const newItem = cardCollection.itemPool.pop()!;
 			cardCollection.appendChild(newItem);
 			cardCollection.itemInUse.push(newItem);
+			cardCollection.reservingItem = newItem;
 		}
 
-		cardCollection.isReserving = true;
 		// determine the slot index
 		const reservingIndex = selector(cardCollection.itemInUse);
 		for(let index = cardCollection.itemInUse.length - 1; index > reservingIndex; --index) {
 			cardCollection.itemInUse[index] = cardCollection.itemInUse[index - 1];
 		}
 
-		// TODO : Attach cards to slots
+		cardCollection.itemInUse.forEach(item => {
+			if(item.assignedCard) {
+				const itemRect = getElementBounds(item);
+				item.assignedCard.lerpAnimator.startAnimation(
+					item.assignedCard.currentPosition, 
+					new Vec2(itemRect.centerX, itemRect.centerY),
+					1,
+					BezierPreset.EaseInOut);
+			}
+		});
+	};
+
+	cardCollection.AssignCardToReservation = (card : ICardPresentation) => {
+		if (!cardCollection.reservingItem) {
+			console.warn('Trying to assign card but no slot reserved!');
+			return;
+		}
+
+		cardCollection.reservingItem.assignedCard = card;
+		
+		const itemRect = getElementBounds(cardCollection.reservingItem);
+		card.lerpAnimator.startAnimation(
+			cardCollection.reservingItem.assignedCard.currentPosition, 
+			new Vec2(itemRect.centerX, itemRect.centerY),
+			1,
+			BezierPreset.EaseInOut);
+
+		cardCollection.reservingItem = null;
+	};
+
+	cardCollection.CancelReservation = () => {
+		if (!cardCollection.reservingItem) {
+			console.warn('Cancelling but there is no reservation');
+			return;
+		}
+
+		// TODO : I'm tiered right now
 	};
 
 	return cardCollection;
 }
 
-setupCardCollection(cardCollection);
+const cardCollection = setupCardCollection(cardCollectionElement);
+
+cardCollection.addEventListener('mousemove', (ev)=>{
+	const selector = (items : ICardCollectionItem[]) => {
+		let bestIndex = 0;
+		let bestDistanceSq = 999999;
+		for (let index = 0; index < items.length; ++index) {
+			const rect = getElementBounds(items[index]);
+			const x = rect.centerX - ev.clientX;
+			const y = rect.centerY - ev.clientY;
+			const distanceSq = x * x + y * y;
+			if (distanceSq < bestDistanceSq) {
+				bestDistanceSq = distanceSq;
+				bestIndex = index;
+			}
+		}
+
+		return bestIndex;
+	};
+
+	cardCollection.ReserveSlot(selector)
+});

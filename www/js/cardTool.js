@@ -1,5 +1,5 @@
 import { Vec2, Vec3 } from './vec';
-import { addCustomStyle } from './domUtils';
+import { addCustomStyle, getElementBounds } from './domUtils';
 import { BezierPreset, cubicInterpolationBezier, cubicInterpolationBezierFirstDerivative } from './math';
 function rotatePitchRoll(vec, pitch, roll) {
     const cp = Math.cos(pitch);
@@ -57,6 +57,7 @@ class CardLerpAnimation {
             this.target.root.style.left = `${this.p1.x}px`;
             this.target.root.style.top = `${this.p1.y}px`;
             this.target.setOrientation(Vec2.Zero);
+            this.target.currentPosition = this.p1;
             cardAnimations.splice(cardAnimations.findIndex((e) => e === this), 1);
             return;
         }
@@ -66,6 +67,7 @@ class CardLerpAnimation {
         const currentPos = Vec2.add(this.p0, this.travel.scale(transformedTime.y));
         this.target.root.style.left = `${currentPos.x}px`;
         this.target.root.style.top = `${currentPos.y}px`;
+        this.target.currentPosition = currentPos;
         const transformedAcceleration = cubicInterpolationBezierFirstDerivative(t, this.bezierParams).scale(rotationFactor);
         this.target.setOrientation(this.direction.scale(transformedAcceleration.y));
     }
@@ -114,6 +116,8 @@ function addCardPresentationCapability(cardElements, options) {
         }
     };
     card.lerpAnimator = new CardLerpAnimation(card, 100);
+    const bounds = getElementBounds(card);
+    card.currentPosition = new Vec2(bounds.centerX, bounds.centerY);
     return card;
 }
 export { addCardPresentationCapability };
