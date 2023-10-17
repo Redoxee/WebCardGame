@@ -1,15 +1,24 @@
 import { Vec2 } from './vec';
-import { BoundingRect } from './domUtils';
+import { addCustomStyle, BoundingRect, uniqueId } from './domUtils';
 import { BezierPreset } from './math';
-function setupCardCollection(collectionELement) {
+function setupCardCollection(collectionELement, params) {
     const cardCollection = collectionELement;
     const itemPoolSize = 30;
     cardCollection.itemPool = [];
     cardCollection.itemInUse = [];
     cardCollection.reservingItem = null;
     cardCollection.bounds = new BoundingRect(cardCollection);
+    let itemStyle = "color:white;";
+    if (params.itemStyle) {
+        itemStyle += params.itemStyle;
+    }
+    const itemStyleClass = addCustomStyle({
+        className: "CardCollectionItem",
+        content: itemStyle,
+    });
     for (let index = 0; index < itemPoolSize; ++index) {
         const pooledItem = document.createElement('div');
+        pooledItem.classList.add(itemStyleClass);
         cardCollection.itemPool.push(pooledItem);
     }
     cardCollection.ReserveSlot = (selector) => {
@@ -17,8 +26,10 @@ function setupCardCollection(collectionELement) {
             const newItem = cardCollection.itemPool.pop();
             cardCollection.appendChild(newItem);
             cardCollection.itemInUse.push(newItem);
+            newItem.appendChild(document.createTextNode(uniqueId()));
         }
         // determine the slot index
+        // TODO : somethings buggy here, if the collection was already reserving we might loose a card wut ?
         const reservingIndex = selector(cardCollection.itemInUse);
         for (let index = cardCollection.itemInUse.length - 1; index > reservingIndex; --index) {
             cardCollection.itemInUse[index].assignedCard = cardCollection.itemInUse[index - 1].assignedCard;
@@ -47,6 +58,7 @@ function setupCardCollection(collectionELement) {
         cardCollection.itemInUse.splice(cardCollection.reservingItem.index, 1);
         cardCollection.reservingItem.assignedCard = null;
         cardCollection.reservingItem.index = -1;
+        cardCollection.reservingItem.replaceChildren();
         cardCollection.itemPool.push(cardCollection.reservingItem);
         cardCollection.reservingItem = null;
         cardCollection.SlideAllCardsToAssignedItems();

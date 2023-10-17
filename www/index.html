@@ -9,7 +9,7 @@
 			background-color: burlywood;
 			height: 3px;
 			width: 3px;
-			position: relative;
+			position: absolute;
 		}
 
 		#target-1 {
@@ -39,32 +39,21 @@
 
 			display: flex;
 			flex-direction: row;
-			justify-content: space-between;
+			justify-content: center;
 			align-items: center;
+			gap : .5em;
 		}
-
-		.mock-card {
-			width: 5em;
-			height: 7em;
-			background-color: aqua;
-			border: solid lightgreen;
-		}
-
 	</style>
 	<body>
 		<div id="game-board">
-
-			<div class="collection" id ="mock-collection">
-				<div class="mock-card"></div>
-				<div class="mock-card"></div>
-				<div class="mock-card"></div>
-				<div class="mock-card"></div>
-			</div>
-
 			<div id="target-1" class="target"></div>
 			<div id="target-2" class="target"></div>
 			<div id="target-3" class="target"></div>
 			<div id="target-4" class="target"></div>
+
+			<div class="collection" id ="mock-collection">
+			</div>
+
 
 			<button id="test-button">TEST</button>
 			<div id='card-root'>

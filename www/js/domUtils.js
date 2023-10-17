@@ -1,6 +1,11 @@
-import { v4 as uuid } from 'uuid';
+let nextUniqueId = 1;
+function uniqueId() {
+    const id = `id-${nextUniqueId.toString(16)}`;
+    nextUniqueId += 1;
+    return id;
+}
 function addCustomStyle(customStyle) {
-    const className = `${customStyle.className}-${uuid()}`;
+    const className = `${customStyle.className}-${uniqueId()}`;
     var style = document.createElement('style');
     style.type = 'text/css';
     style.innerHTML = `${customStyle.className ? `.${className}` : ''} ${customStyle.id ? `#${customStyle.id}` : ''} { ${customStyle.content} }`;
@@ -35,4 +40,4 @@ class BoundingRect {
         return position.x > this.left && position.x < this.right && position.y > this.top && position.y < this.bottom;
     }
 }
-export { addCustomStyle, BoundingRect };
+export { uniqueId, addCustomStyle, BoundingRect };

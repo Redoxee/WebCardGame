@@ -1,6 +1,6 @@
 import { Vec2 } from './vec';
 import { ICardPresentation } from './cardTool';
-import { BoundingRect } from './domUtils';
+import { addCustomStyle, BoundingRect, uniqueId } from './domUtils';
 import { BezierPreset } from './math';
 
 interface ICardCollectionItem extends HTMLDivElement {
@@ -22,7 +22,11 @@ interface ICardCollection extends HTMLElement {
 	SlideAllCardsToAssignedItems : ()=>void;
 }
 
-function setupCardCollection(collectionELement : HTMLElement) {
+interface ICardCollectionParameters {
+	itemStyle : string|null
+}
+
+function setupCardCollection(collectionELement : HTMLElement, params : ICardCollectionParameters) {
 	const cardCollection = collectionELement as ICardCollection;
 
 	const itemPoolSize = 30;
@@ -32,8 +36,19 @@ function setupCardCollection(collectionELement : HTMLElement) {
 	cardCollection.reservingItem = null;
 	cardCollection.bounds = new BoundingRect(cardCollection);
 
+	let itemStyle = "color:white;";
+	if (params.itemStyle) {
+		itemStyle += params.itemStyle;
+	}
+
+	const itemStyleClass = addCustomStyle({
+		className: "CardCollectionItem",
+		content: itemStyle,
+	});
+
 	for (let index = 0; index < itemPoolSize; ++index) {
 		const pooledItem = document.createElement('div')!as ICardCollectionItem;
+		pooledItem.classList.add(itemStyleClass);
 		cardCollection.itemPool.push(pooledItem)
 	}
 
@@ -42,9 +57,11 @@ function setupCardCollection(collectionELement : HTMLElement) {
 			const newItem = cardCollection.itemPool.pop()!;
 			cardCollection.appendChild(newItem);
 			cardCollection.itemInUse.push(newItem);
+			newItem.appendChild(document.createTextNode(uniqueId()));
 		}
 		
 		// determine the slot index
+		// TODO : somethings buggy here, if the collection was already reserving we might loose a card wut ?
 		const reservingIndex = selector(cardCollection.itemInUse);
 		for(let index = cardCollection.itemInUse.length - 1; index > reservingIndex; --index) {
 			cardCollection.itemInUse[index].assignedCard = cardCollection.itemInUse[index - 1].assignedCard;
@@ -84,6 +101,7 @@ function setupCardCollection(collectionELement : HTMLElement) {
 		cardCollection.itemInUse.splice(cardCollection.reservingItem.index, 1);
 		cardCollection.reservingItem.assignedCard = null;
 		cardCollection.reservingItem.index = -1;
+		cardCollection.reservingItem.replaceChildren();
 
 		cardCollection.itemPool.push(cardCollection.reservingItem);
 		cardCollection.reservingItem = null;
@@ -128,4 +146,4 @@ function SelectClosestItemSelector(posX : number, posY : number) {
 	return selector;
 }
 
-export {setupCardCollection, SelectClosestItemSelector};
+export {ICardCollection, ICardCollectionParameters, setupCardCollection, SelectClosestItemSelector};
