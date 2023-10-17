@@ -1,16 +1,15 @@
 import {Vec2, Vec3} from './vec';
 import {ICardElements, ICardPresentationOptions, addCardPresentationCapability, ICardPresentation} from './cardTool';
 import {setupSandboxCurves} from './curveSandbox';
-import {addCustomStyle, BoundingRect} from './domUtils';
-import {v4 as uuid} from 'uuid';
+import {uniqueId ,addCustomStyle, BoundingRect} from './domUtils';
 import { cubicInterpolationBezier, cubicInterpolationBezierFirstDerivative, BezierPreset, IBezierParams } from './math';
-import { setupCardCollection, SelectClosestItemSelector } from './cardCollectionTool';
+import { ICardCollection, setupCardCollection, SelectClosestItemSelector } from './cardCollectionTool';
 
 const board = document.getElementById('game-board')!;
 const container = document.getElementById('card-root')!;
 
 function makeCard(rootNode : HTMLElement) : ICardPresentation {
-	const cardClassName = `PresentationCard${uuid()}`;
+	const cardClassName = `PresentationCard${uniqueId()}`;
 	rootNode.classList.add(cardClassName);
 	const card = document.querySelector(`.${cardClassName} #card`)! as HTMLElement;
 	const cardItem = document.querySelector(`.${cardClassName} #card-item`)! as HTMLElement;

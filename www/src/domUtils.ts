@@ -1,5 +1,11 @@
-import {v4 as uuid} from 'uuid';
 import { Vec2 } from './vec';
+
+let nextUniqueId = 1;
+function uniqueId() {
+    const id = `id-${nextUniqueId.toString(16)}`;
+    nextUniqueId += 1;
+    return id;
+}
 
 interface ICustomDynamicStyle {
 	className? : string,
@@ -8,7 +14,7 @@ interface ICustomDynamicStyle {
 }
 
 function addCustomStyle(customStyle : ICustomDynamicStyle) : string {
-	const className = `${customStyle.className}-${uuid()}`;
+	const className = `${customStyle.className}-${uniqueId()}`;
 	var style = document.createElement('style');
 	style.type = 'text/css';
 	style.innerHTML = `${customStyle.className?`.${className}` : ''} ${customStyle.id?`#${customStyle.id}` : ''} { ${customStyle.content} }`;
@@ -60,4 +66,4 @@ class BoundingRect {
 	}
 }
 
-export {ICustomDynamicStyle , addCustomStyle, BoundingRect};
+export {uniqueId ,ICustomDynamicStyle , addCustomStyle, BoundingRect};
