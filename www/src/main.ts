@@ -213,6 +213,7 @@ const cardCollectionElement = document.getElementById('mock-collection')!;
 
 interface ICardCollectionItem extends HTMLDivElement {
 	assignedCard : ICardPresentation|null;
+	index : number;
 }
 
 type SlotIndexSelector = (availableSlots : ICardCollectionItem[]) => number;
@@ -220,12 +221,12 @@ type SlotIndexSelector = (availableSlots : ICardCollectionItem[]) => number;
 interface ICardCollection extends HTMLElement {
 	itemPool : ICardCollectionItem[];
 	itemInUse : ICardCollectionItem[];
-	cardItems : ICardPresentation|null[];
 	reservingItem : ICardCollectionItem|null;
 
 	ReserveSlot : (selector : SlotIndexSelector)=>void;
 	CancelReservation : ()=>void;
 	AssignCardToReservation : (card : ICardPresentation)=>void;
+	SlideAllCardsToAssignedItems : ()=>void;
 }
 
 function setupCardCollection(collectionELement : HTMLElement) {
@@ -234,7 +235,6 @@ function setupCardCollection(collectionELement : HTMLElement) {
 	const itemPoolSize = 30;
 
 	cardCollection.itemPool = [];
-	cardCollection.cardItems = [];
 	cardCollection.itemInUse = [];
 	cardCollection.reservingItem = null;
 
@@ -248,25 +248,18 @@ function setupCardCollection(collectionELement : HTMLElement) {
 			const newItem = cardCollection.itemPool.pop()!;
 			cardCollection.appendChild(newItem);
 			cardCollection.itemInUse.push(newItem);
-			cardCollection.reservingItem = newItem;
 		}
-
+		
 		// determine the slot index
 		const reservingIndex = selector(cardCollection.itemInUse);
 		for(let index = cardCollection.itemInUse.length - 1; index > reservingIndex; --index) {
-			cardCollection.itemInUse[index] = cardCollection.itemInUse[index - 1];
+			cardCollection.itemInUse[index].assignedCard = cardCollection.itemInUse[index - 1].assignedCard;
 		}
 
-		cardCollection.itemInUse.forEach(item => {
-			if(item.assignedCard) {
-				const itemRect = getElementBounds(item);
-				item.assignedCard.lerpAnimator.startAnimation(
-					item.assignedCard.currentPosition, 
-					new Vec2(itemRect.centerX, itemRect.centerY),
-					1,
-					BezierPreset.EaseInOut);
-			}
-		});
+		cardCollection.reservingItem = cardCollection.itemInUse[reservingIndex];
+		cardCollection.reservingItem.assignedCard = null;
+		cardCollection.reservingItem.index = reservingIndex;
+		cardCollection.SlideAllCardsToAssignedItems();
 	};
 
 	cardCollection.AssignCardToReservation = (card : ICardPresentation) => {
@@ -293,7 +286,28 @@ function setupCardCollection(collectionELement : HTMLElement) {
 			return;
 		}
 
-		// TODO : I'm tiered right now
+		cardCollection.removeChild(cardCollection.reservingItem);
+		cardCollection.itemInUse.splice(cardCollection.reservingItem.index, 1);
+		cardCollection.reservingItem.assignedCard = null;
+		cardCollection.reservingItem.index = -1;
+
+		cardCollection.itemPool.push(cardCollection.reservingItem);
+		cardCollection.reservingItem = null;
+		
+		cardCollection.SlideAllCardsToAssignedItems();
+	};
+
+	cardCollection.SlideAllCardsToAssignedItems = ()=>{
+		cardCollection.itemInUse.forEach(item => {
+			if(item.assignedCard) {
+				const itemRect = getElementBounds(item);
+				item.assignedCard.lerpAnimator.startAnimation(
+					item.assignedCard.currentPosition, 
+					new Vec2(itemRect.centerX, itemRect.centerY),
+					1,
+					BezierPreset.EaseInOut);
+			}
+		});
 	};
 
 	return cardCollection;
@@ -301,7 +315,7 @@ function setupCardCollection(collectionELement : HTMLElement) {
 
 const cardCollection = setupCardCollection(cardCollectionElement);
 
-cardCollection.addEventListener('mousemove', (ev)=>{
+cardCollection.addEventListener('mouseenter', (ev)=>{
 	const selector = (items : ICardCollectionItem[]) => {
 		let bestIndex = 0;
 		let bestDistanceSq = 999999;
@@ -320,4 +334,8 @@ cardCollection.addEventListener('mousemove', (ev)=>{
 	};
 
 	cardCollection.ReserveSlot(selector)
+});
+
+cardCollection.addEventListener('mouseleave', (ev)=>{
+	cardCollection.CancelReservation();
 });

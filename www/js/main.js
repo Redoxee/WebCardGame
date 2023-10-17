@@ -162,7 +162,6 @@ function setupCardCollection(collectionELement) {
     const cardCollection = collectionELement;
     const itemPoolSize = 30;
     cardCollection.itemPool = [];
-    cardCollection.cardItems = [];
     cardCollection.itemInUse = [];
     cardCollection.reservingItem = null;
     for (let index = 0; index < itemPoolSize; ++index) {
@@ -174,23 +173,20 @@ function setupCardCollection(collectionELement) {
             const newItem = cardCollection.itemPool.pop();
             cardCollection.appendChild(newItem);
             cardCollection.itemInUse.push(newItem);
-            cardCollection.reservingItem = newItem;
         }
         // determine the slot index
         const reservingIndex = selector(cardCollection.itemInUse);
         for (let index = cardCollection.itemInUse.length - 1; index > reservingIndex; --index) {
-            cardCollection.itemInUse[index] = cardCollection.itemInUse[index - 1];
+            cardCollection.itemInUse[index].assignedCard = cardCollection.itemInUse[index - 1].assignedCard;
         }
-        cardCollection.itemInUse.forEach(item => {
-            if (item.assignedCard) {
-                const itemRect = getElementBounds(item);
-                item.assignedCard.lerpAnimator.startAnimation(item.assignedCard.currentPosition, new Vec2(itemRect.centerX, itemRect.centerY), 1, BezierPreset.EaseInOut);
-            }
-        });
+        cardCollection.reservingItem = cardCollection.itemInUse[reservingIndex];
+        cardCollection.reservingItem.assignedCard = null;
+        cardCollection.reservingItem.index = reservingIndex;
+        cardCollection.SlideAllCardsToAssignedItems();
     };
     cardCollection.AssignCardToReservation = (card) => {
         if (!cardCollection.reservingItem) {
-            console.log('Trying to assign card but no slot reserved!');
+            console.warn('Trying to assign card but no slot reserved!');
             return;
         }
         cardCollection.reservingItem.assignedCard = card;
@@ -198,10 +194,31 @@ function setupCardCollection(collectionELement) {
         card.lerpAnimator.startAnimation(cardCollection.reservingItem.assignedCard.currentPosition, new Vec2(itemRect.centerX, itemRect.centerY), 1, BezierPreset.EaseInOut);
         cardCollection.reservingItem = null;
     };
+    cardCollection.CancelReservation = () => {
+        if (!cardCollection.reservingItem) {
+            console.warn('Cancelling but there is no reservation');
+            return;
+        }
+        cardCollection.removeChild(cardCollection.reservingItem);
+        cardCollection.itemInUse.splice(cardCollection.reservingItem.index, 1);
+        cardCollection.reservingItem.assignedCard = null;
+        cardCollection.reservingItem.index = -1;
+        cardCollection.itemPool.push(cardCollection.reservingItem);
+        cardCollection.reservingItem = null;
+        cardCollection.SlideAllCardsToAssignedItems();
+    };
+    cardCollection.SlideAllCardsToAssignedItems = () => {
+        cardCollection.itemInUse.forEach(item => {
+            if (item.assignedCard) {
+                const itemRect = getElementBounds(item);
+                item.assignedCard.lerpAnimator.startAnimation(item.assignedCard.currentPosition, new Vec2(itemRect.centerX, itemRect.centerY), 1, BezierPreset.EaseInOut);
+            }
+        });
+    };
     return cardCollection;
 }
 const cardCollection = setupCardCollection(cardCollectionElement);
-cardCollection.addEventListener('mousemove', (ev) => {
+cardCollection.addEventListener('mouseenter', (ev) => {
     const selector = (items) => {
         let bestIndex = 0;
         let bestDistanceSq = 999999;
@@ -218,4 +235,7 @@ cardCollection.addEventListener('mousemove', (ev) => {
         return bestIndex;
     };
     cardCollection.ReserveSlot(selector);
+});
+cardCollection.addEventListener('mouseleave', (ev) => {
+    cardCollection.CancelReservation();
 });
