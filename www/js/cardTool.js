@@ -1,5 +1,5 @@
 import { Vec2, Vec3 } from './vec';
-import { addCustomStyle, getElementBounds } from './domUtils';
+import { addCustomStyle, BoundingRect } from './domUtils';
 import { BezierPreset, cubicInterpolationBezier, cubicInterpolationBezierFirstDerivative } from './math';
 function rotatePitchRoll(vec, pitch, roll) {
     const cp = Math.cos(pitch);
@@ -116,7 +116,7 @@ function addCardPresentationCapability(cardElements, options) {
         }
     };
     card.lerpAnimator = new CardLerpAnimation(card, 100);
-    const bounds = getElementBounds(card);
+    const bounds = new BoundingRect(card);
     card.currentPosition = new Vec2(bounds.centerX, bounds.centerY);
     return card;
 }

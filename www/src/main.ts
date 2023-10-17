@@ -1,7 +1,7 @@
 import {Vec2, Vec3} from './vec';
 import {ICardElements, ICardPresentationOptions, addCardPresentationCapability, ICardPresentation} from './cardTool';
 import {setupSandboxCurves} from './curveSandbox';
-import {addCustomStyle, getElementBounds} from './domUtils';
+import {addCustomStyle, BoundingRect} from './domUtils';
 import {v4 as uuid} from 'uuid';
 import { cubicInterpolationBezier, cubicInterpolationBezierFirstDerivative, BezierPreset, IBezierParams } from './math';
 
@@ -36,51 +36,19 @@ function makeCard(rootNode : HTMLElement) : ICardPresentation {
 	return presentationCard;
 }
 
-const presentationCard = makeCard(container);
+const debugCard = makeCard(container);
 
 let draggedObject : ICardPresentation | null = null;
-let isSelected = false;
-let startTouchTimeStamp = 0;
-
-const clickDragThreshold = 500;
 
 function startInput(card : ICardPresentation) {
-	if(isSelected) {
-		presentationCard.setSmoothOrientation(true);
-		presentationCard.setZoom(1);
-	}
-
 	draggedObject = card;
 	
-	presentationCard.setSmoothOrientation(false);
-	
-	startTouchTimeStamp = performance.now();
+	debugCard.setSmoothOrientation(false);
 }
 
 function endInput() {
-	const inputDuration = performance.now() - startTouchTimeStamp;
-	if(inputDuration < clickDragThreshold) {
-		if(!isSelected)
-		{
-			isSelected = true;
-			presentationCard.setZoom(2);
-		}
-		else {
-			isSelected = false;
-			presentationCard.setZoom(1);
-		}
-	}
-
 	if (draggedObject) {
 		draggedObject = null;
-	}
-}
-
-function cardFollowPosition(card : ICardPresentation,posX : number, posY : number) {
-	if (isSelected) {
-		const targetRect = getElementBounds(presentationCard);
-		const evPosition = new Vec2(posX - targetRect.centerX, posY - targetRect.centerY);
-		card.setOrientation(evPosition);
 	}
 }
 
@@ -93,15 +61,7 @@ function setupCardInput(targetCard : ICardPresentation) {
 	targetCard.root.addEventListener('mouseup', (_)=>{
 		//endInput();
 	});
-	
-	targetCard.root.addEventListener('pointerleave', (_)=> {
-		if (isSelected) {
-			isSelected = false;
-			targetCard.setZoom(1);
-			targetCard.setOrientation(Vec2.Zero);
-		}
-	});
-	
+
 	targetCard.root.addEventListener("touchstart", (ev)=>{
 		const target = ev.target as ICardPresentation;
 		startInput(target);
@@ -114,18 +74,9 @@ function setupCardInput(targetCard : ICardPresentation) {
 	targetCard.root.addEventListener("touchend", (ev)=>{
 		endInput();
 	}, false);
-	
-	targetCard.root.addEventListener('mousemove', (ev)=> {
-		cardFollowPosition(targetCard, ev.clientX, ev.clientY);
-	});
-	
-	targetCard.root.addEventListener('touchmove', (ev)=> {
-		const positionHolder = ev.targetTouches[0];
-		cardFollowPosition(targetCard, positionHolder.clientX, positionHolder.clientY);
-	});
 }
 
-setupCardInput(presentationCard);
+setupCardInput(debugCard);
 
 const testButton = document.getElementById('test-button') as HTMLButtonElement;
 const targets = [
@@ -139,9 +90,9 @@ let currentIndex = 0;
 
 testButton.addEventListener('click', (_ev)=>{
 	currentIndex = (currentIndex + 1) % targets.length;
-	const startPosition = getElementBounds(presentationCard.root)
-	const targetPosition = getElementBounds(targets[currentIndex]);
-	presentationCard.lerpAnimator.startAnimation(
+	const startPosition = new BoundingRect(debugCard.root)
+	const targetPosition = new BoundingRect(targets[currentIndex]);
+	debugCard.lerpAnimator.startAnimation(
 		new Vec2(startPosition.centerX, startPosition.centerY),
 		new Vec2(targetPosition.centerX, targetPosition.centerY),
 		.65,
@@ -150,7 +101,7 @@ testButton.addEventListener('click', (_ev)=>{
 });
 
 function boardMove(card : ICardPresentation,posX : number, posY : number) {
-	const startPosition = getElementBounds(card.root);
+	const startPosition = new BoundingRect(card.root);
 	const start = new Vec2(startPosition.centerX, startPosition.centerY);
 	const end = new Vec2(posX, posY);
 
@@ -200,14 +151,27 @@ board.addEventListener('mouseup', ()=>{
 	endInput();
 });
 
-const cloned = container.cloneNode(true) as HTMLElement;
+const cloned = debugCard.cloneNode(true) as HTMLElement;
 board.appendChild(cloned);
 
 const clonedCard = makeCard(cloned);
 setupCardInput(clonedCard);
 
-const clonedBound = getElementBounds(cloned);
+const clonedBound = new BoundingRect(cloned);
 clonedCard.lerpAnimator.startAnimation(new Vec2(clonedBound.centerX, clonedBound.centerY), new Vec2(600, 300), .5, BezierPreset.EaseInOut)
+
+const testCards : ICardPresentation[] = [];
+for (let index = 0; index < 10; ++index){
+	const element = debugCard.cloneNode(true) as HTMLElement;
+	board.appendChild(element);
+	const testCard = makeCard(element);
+	testCard.lerpAnimator.startAnimation(testCard.currentPosition, 
+		Vec2.add(testCard.currentPosition, new Vec2(index  * 30, 0)),
+		.5,
+		BezierPreset.EaseInOut);
+	setupCardInput(testCard);
+	testCards.push(testCard);
+}
 
 const cardCollectionElement = document.getElementById('mock-collection')!;
 
@@ -270,7 +234,7 @@ function setupCardCollection(collectionELement : HTMLElement) {
 
 		cardCollection.reservingItem.assignedCard = card;
 		
-		const itemRect = getElementBounds(cardCollection.reservingItem);
+		const itemRect = new BoundingRect(cardCollection.reservingItem);
 		card.lerpAnimator.startAnimation(
 			cardCollection.reservingItem.assignedCard.currentPosition, 
 			new Vec2(itemRect.centerX, itemRect.centerY),
@@ -300,7 +264,7 @@ function setupCardCollection(collectionELement : HTMLElement) {
 	cardCollection.SlideAllCardsToAssignedItems = ()=>{
 		cardCollection.itemInUse.forEach(item => {
 			if(item.assignedCard) {
-				const itemRect = getElementBounds(item);
+				const itemRect = new BoundingRect(item);
 				item.assignedCard.lerpAnimator.startAnimation(
 					item.assignedCard.currentPosition, 
 					new Vec2(itemRect.centerX, itemRect.centerY),
@@ -320,7 +284,7 @@ cardCollection.addEventListener('mouseenter', (ev)=>{
 		let bestIndex = 0;
 		let bestDistanceSq = 999999;
 		for (let index = 0; index < items.length; ++index) {
-			const rect = getElementBounds(items[index]);
+			const rect = new BoundingRect(items[index]);
 			const x = rect.centerX - ev.clientX;
 			const y = rect.centerY - ev.clientY;
 			const distanceSq = x * x + y * y;

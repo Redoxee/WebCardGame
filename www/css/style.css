@@ -15,9 +15,8 @@ body {
 }
 
 #card-root {
-	width: 10em;
-	height: 10em;
-	border: solid whitesmoke;
+	width: 5em;
+	height: 7em;
 	display: flex;
 	justify-content: center;  
 	align-items: center;
