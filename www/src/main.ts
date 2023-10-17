@@ -4,6 +4,7 @@ import {setupSandboxCurves} from './curveSandbox';
 import {addCustomStyle, BoundingRect} from './domUtils';
 import {v4 as uuid} from 'uuid';
 import { cubicInterpolationBezier, cubicInterpolationBezierFirstDerivative, BezierPreset, IBezierParams } from './math';
+import { setupCardCollection, SelectClosestItemSelector } from './cardCollectionTool';
 
 const board = document.getElementById('game-board')!;
 const container = document.getElementById('card-root')!;
@@ -53,13 +54,8 @@ function endInput() {
 }
 
 function setupCardInput(targetCard : ICardPresentation) {
-
 	targetCard.root.addEventListener('mousedown', (_)=>{
 		startInput(targetCard);
-	});
-	
-	targetCard.root.addEventListener('mouseup', (_)=>{
-		//endInput();
 	});
 
 	targetCard.root.addEventListener("touchstart", (ev)=>{
@@ -175,131 +171,18 @@ for (let index = 0; index < 10; ++index){
 
 const cardCollectionElement = document.getElementById('mock-collection')!;
 
-interface ICardCollectionItem extends HTMLDivElement {
-	assignedCard : ICardPresentation|null;
-	index : number;
-}
-
-type SlotIndexSelector = (availableSlots : ICardCollectionItem[]) => number;
-
-interface ICardCollection extends HTMLElement {
-	itemPool : ICardCollectionItem[];
-	itemInUse : ICardCollectionItem[];
-	reservingItem : ICardCollectionItem|null;
-
-	ReserveSlot : (selector : SlotIndexSelector)=>void;
-	CancelReservation : ()=>void;
-	AssignCardToReservation : (card : ICardPresentation)=>void;
-	SlideAllCardsToAssignedItems : ()=>void;
-}
-
-function setupCardCollection(collectionELement : HTMLElement) {
-	const cardCollection = collectionELement as ICardCollection;
-
-	const itemPoolSize = 30;
-
-	cardCollection.itemPool = [];
-	cardCollection.itemInUse = [];
-	cardCollection.reservingItem = null;
-
-	for (let index = 0; index < itemPoolSize; ++index) {
-		const pooledItem = document.createElement('div')!as ICardCollectionItem;
-		cardCollection.itemPool.push(pooledItem)
-	}
-
-	cardCollection.ReserveSlot = (selector : SlotIndexSelector) => {
-		if (!cardCollection.reservingItem) {
-			const newItem = cardCollection.itemPool.pop()!;
-			cardCollection.appendChild(newItem);
-			cardCollection.itemInUse.push(newItem);
-		}
-		
-		// determine the slot index
-		const reservingIndex = selector(cardCollection.itemInUse);
-		for(let index = cardCollection.itemInUse.length - 1; index > reservingIndex; --index) {
-			cardCollection.itemInUse[index].assignedCard = cardCollection.itemInUse[index - 1].assignedCard;
-		}
-
-		cardCollection.reservingItem = cardCollection.itemInUse[reservingIndex];
-		cardCollection.reservingItem.assignedCard = null;
-		cardCollection.reservingItem.index = reservingIndex;
-		cardCollection.SlideAllCardsToAssignedItems();
-	};
-
-	cardCollection.AssignCardToReservation = (card : ICardPresentation) => {
-		if (!cardCollection.reservingItem) {
-			console.warn('Trying to assign card but no slot reserved!');
-			return;
-		}
-
-		cardCollection.reservingItem.assignedCard = card;
-		
-		const itemRect = new BoundingRect(cardCollection.reservingItem);
-		card.lerpAnimator.startAnimation(
-			cardCollection.reservingItem.assignedCard.currentPosition, 
-			new Vec2(itemRect.centerX, itemRect.centerY),
-			1,
-			BezierPreset.EaseInOut);
-
-		cardCollection.reservingItem = null;
-	};
-
-	cardCollection.CancelReservation = () => {
-		if (!cardCollection.reservingItem) {
-			console.warn('Cancelling but there is no reservation');
-			return;
-		}
-
-		cardCollection.removeChild(cardCollection.reservingItem);
-		cardCollection.itemInUse.splice(cardCollection.reservingItem.index, 1);
-		cardCollection.reservingItem.assignedCard = null;
-		cardCollection.reservingItem.index = -1;
-
-		cardCollection.itemPool.push(cardCollection.reservingItem);
-		cardCollection.reservingItem = null;
-		
-		cardCollection.SlideAllCardsToAssignedItems();
-	};
-
-	cardCollection.SlideAllCardsToAssignedItems = ()=>{
-		cardCollection.itemInUse.forEach(item => {
-			if(item.assignedCard) {
-				const itemRect = new BoundingRect(item);
-				item.assignedCard.lerpAnimator.startAnimation(
-					item.assignedCard.currentPosition, 
-					new Vec2(itemRect.centerX, itemRect.centerY),
-					1,
-					BezierPreset.EaseInOut);
-			}
-		});
-	};
-
-	return cardCollection;
-}
-
 const cardCollection = setupCardCollection(cardCollectionElement);
 
-cardCollection.addEventListener('mouseenter', (ev)=>{
-	const selector = (items : ICardCollectionItem[]) => {
-		let bestIndex = 0;
-		let bestDistanceSq = 999999;
-		for (let index = 0; index < items.length; ++index) {
-			const rect = new BoundingRect(items[index]);
-			const x = rect.centerX - ev.clientX;
-			const y = rect.centerY - ev.clientY;
-			const distanceSq = x * x + y * y;
-			if (distanceSq < bestDistanceSq) {
-				bestDistanceSq = distanceSq;
-				bestIndex = index;
-			}
+board.addEventListener('mousemove', (ev)=> {
+	const mousePosition = new Vec2(ev.clientX, ev.clientY);
+	if (cardCollection.bounds.Contains(mousePosition)) {
+		if (!cardCollection.reservingItem) {
+			cardCollection.ReserveSlot(SelectClosestItemSelector(ev.clientX, ev.clientY));
 		}
-
-		return bestIndex;
-	};
-
-	cardCollection.ReserveSlot(selector)
-});
-
-cardCollection.addEventListener('mouseleave', (ev)=>{
-	cardCollection.CancelReservation();
+	}
+	else {
+		if (cardCollection.reservingItem) {
+			cardCollection.CancelReservation();
+		}
+	}
 });
