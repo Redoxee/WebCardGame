@@ -48,6 +48,11 @@ function runMain() {
 
 	function startInput(card : ICardPresentation) {
 		draggedObject = card;
+		if (cardCollection.ContainsCard(card)) {
+			console.log('detaching');
+			cardCollection.DetachCard(card);
+		}
+
 		card.style.zIndex = draggedZindex.toString();
 		debugCard.setSmoothOrientation(false);
 	}

@@ -19,6 +19,8 @@ interface ICardCollection extends HTMLElement {
 	ReserveSlot : (selector : SlotIndexSelector)=>void;
 	CancelReservation : ()=>void;
 	AssignCardToReservation : (card : ICardPresentation)=>void;
+	ContainsCard : (card : ICardPresentation) => boolean;
+	DetachCard : (card : ICardPresentation) => void;
 	SlideAllCardsToAssignedItems : ()=>void;
 }
 
@@ -147,6 +149,22 @@ function setupCardCollection(collectionELement : HTMLElement, params : ICardColl
 			}
 		});
 	};
+
+	cardCollection.ContainsCard = (card : ICardPresentation) => {
+		return cardCollection.itemInUse.find((el)=>el.assignedCard === card) !== undefined;
+	}
+
+	cardCollection.DetachCard = (card) => {
+		const index = cardCollection.itemInUse.findIndex((el)=>el.assignedCard === card);
+		if(index < 0) {
+			console.warn('detaching unkown card');
+			return;
+		}
+
+		cardCollection.removeChild(cardCollection.itemInUse[index]);
+		cardCollection.itemInUse.splice(index, 1);
+		cardCollection.SlideAllCardsToAssignedItems();
+	}
 
 	return cardCollection;
 }

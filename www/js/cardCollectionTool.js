@@ -92,6 +92,19 @@ function setupCardCollection(collectionELement, params) {
             }
         });
     };
+    cardCollection.ContainsCard = (card) => {
+        return cardCollection.itemInUse.find((el) => el.assignedCard === card) !== undefined;
+    };
+    cardCollection.DetachCard = (card) => {
+        const index = cardCollection.itemInUse.findIndex((el) => el.assignedCard === card);
+        if (index < 0) {
+            console.warn('detaching unkown card');
+            return;
+        }
+        cardCollection.removeChild(cardCollection.itemInUse[index]);
+        cardCollection.itemInUse.splice(index, 1);
+        cardCollection.SlideAllCardsToAssignedItems();
+    };
     return cardCollection;
 }
 function SelectClosestItemSelector(posX, posY) {
