@@ -7,6 +7,7 @@ function runMain() {
     const board = document.getElementById('game-board');
     const container = document.getElementById('card-root');
     let hoveredCardCollection = null;
+    const draggedZindex = 100;
     function makeCard(rootNode) {
         const cardClassName = `PresentationCard${uniqueId()}`;
         rootNode.classList.add(cardClassName);
@@ -35,10 +36,12 @@ function runMain() {
     let draggedObject = null;
     function startInput(card) {
         draggedObject = card;
+        card.style.zIndex = draggedZindex.toString();
         debugCard.setSmoothOrientation(false);
     }
     function endInput() {
         if (draggedObject) {
+            draggedObject.style.zIndex = (draggedZindex - 1).toString();
             if (hoveredCardCollection) {
                 hoveredCardCollection.AssignCardToReservation(draggedObject);
             }
@@ -113,12 +116,6 @@ function runMain() {
     board.addEventListener('mouseup', () => {
         endInput();
     });
-    const cloned = debugCard.cloneNode(true);
-    board.appendChild(cloned);
-    const clonedCard = makeCard(cloned);
-    setupCardInput(clonedCard);
-    const clonedBound = new BoundingRect(cloned);
-    clonedCard.lerpAnimator.startAnimation(new Vec2(clonedBound.centerX, clonedBound.centerY), new Vec2(600, 300), .5, BezierPreset.EaseInOut);
     const testCards = [];
     for (let index = 0; index < 10; ++index) {
         const element = debugCard.cloneNode(true);
@@ -130,7 +127,7 @@ function runMain() {
     }
     const cardCollectionElement = document.getElementById('mock-collection');
     const cardCollectionParams = {
-        itemStyle: "width : 5em; height: 5em; border : solid skyblue;",
+        itemStyle: "width : 5em; height: 5em",
     };
     const cardCollection = setupCardCollection(cardCollectionElement, cardCollectionParams);
     board.addEventListener('mousemove', (ev) => {
@@ -139,13 +136,15 @@ function runMain() {
             if (!cardCollection.reservingItem) {
                 hoveredCardCollection = cardCollection;
             }
-            cardCollection.ReserveSlot(SelectClosestItemSelector(ev.clientX, ev.clientY));
+            if (draggedObject) {
+                cardCollection.ReserveSlot(SelectClosestItemSelector(ev.clientX, ev.clientY));
+            }
         }
         else {
-            if (cardCollection.reservingItem) {
-                cardCollection.CancelReservation();
-                hoveredCardCollection = null;
+            if (hoveredCardCollection && hoveredCardCollection.reservingItem) {
+                hoveredCardCollection.CancelReservation();
             }
+            hoveredCardCollection = null;
         }
     });
 }

@@ -1,5 +1,5 @@
 import { Vec2 } from './vec';
-import { addCustomStyle, BoundingRect, uniqueId } from './domUtils';
+import { addCustomStyle, BoundingRect } from './domUtils';
 import { BezierPreset } from './math';
 function setupCardCollection(collectionELement, params) {
     const cardCollection = collectionELement;
@@ -26,17 +26,36 @@ function setupCardCollection(collectionELement, params) {
             const newItem = cardCollection.itemPool.pop();
             cardCollection.appendChild(newItem);
             cardCollection.itemInUse.push(newItem);
-            newItem.appendChild(document.createTextNode(uniqueId()));
+            const reservingIndex = selector(cardCollection.itemInUse);
+            const numberOfItems = cardCollection.itemInUse.length;
+            for (let index = numberOfItems - 2; index >= reservingIndex; --index) {
+                cardCollection.itemInUse[index + 1].assignedCard = cardCollection.itemInUse[index].assignedCard;
+            }
+            cardCollection.reservingItem = cardCollection.itemInUse[reservingIndex];
+            cardCollection.reservingItem.index = reservingIndex;
+            cardCollection.reservingItem.assignedCard = null;
+            cardCollection.bounds.Recompute();
         }
-        // determine the slot index
-        // TODO : somethings buggy here, if the collection was already reserving we might loose a card wut ?
-        const reservingIndex = selector(cardCollection.itemInUse);
-        for (let index = cardCollection.itemInUse.length - 1; index > reservingIndex; --index) {
-            cardCollection.itemInUse[index].assignedCard = cardCollection.itemInUse[index - 1].assignedCard;
+        else {
+            const reservingIndex = selector(cardCollection.itemInUse);
+            const previousEmptyIndex = cardCollection.reservingItem.index;
+            const numberOfItems = cardCollection.itemInUse.length;
+            if (reservingIndex !== previousEmptyIndex) {
+                if (reservingIndex > previousEmptyIndex) {
+                    for (let index = previousEmptyIndex; index < (reservingIndex); ++index) {
+                        cardCollection.itemInUse[index].assignedCard = cardCollection.itemInUse[index + 1].assignedCard;
+                    }
+                }
+                else {
+                    for (let index = previousEmptyIndex; index > (reservingIndex); --index) {
+                        cardCollection.itemInUse[index].assignedCard = cardCollection.itemInUse[index - 1].assignedCard;
+                    }
+                }
+                cardCollection.reservingItem = cardCollection.itemInUse[reservingIndex];
+                cardCollection.reservingItem.index = reservingIndex;
+                cardCollection.reservingItem.assignedCard = null;
+            }
         }
-        cardCollection.reservingItem = cardCollection.itemInUse[reservingIndex];
-        cardCollection.reservingItem.assignedCard = null;
-        cardCollection.reservingItem.index = reservingIndex;
         cardCollection.SlideAllCardsToAssignedItems();
     };
     cardCollection.AssignCardToReservation = (card) => {
@@ -47,6 +66,7 @@ function setupCardCollection(collectionELement, params) {
         cardCollection.reservingItem.assignedCard = card;
         const itemRect = new BoundingRect(cardCollection.reservingItem);
         card.lerpAnimator.startAnimation(cardCollection.reservingItem.assignedCard.currentPosition, new Vec2(itemRect.centerX, itemRect.centerY), 1, BezierPreset.EaseInOut);
+        card.style.zIndex = cardCollection.reservingItem.index.toString();
         cardCollection.reservingItem = null;
     };
     cardCollection.CancelReservation = () => {
@@ -64,10 +84,11 @@ function setupCardCollection(collectionELement, params) {
         cardCollection.SlideAllCardsToAssignedItems();
     };
     cardCollection.SlideAllCardsToAssignedItems = () => {
-        cardCollection.itemInUse.forEach(item => {
+        cardCollection.itemInUse.forEach((item, index) => {
             if (item.assignedCard) {
                 const itemRect = new BoundingRect(item);
                 item.assignedCard.lerpAnimator.startAnimation(item.assignedCard.currentPosition, new Vec2(itemRect.centerX, itemRect.centerY), 1, BezierPreset.EaseInOut);
+                item.assignedCard.style.zIndex = index.toString();
             }
         });
     };
@@ -76,7 +97,7 @@ function setupCardCollection(collectionELement, params) {
 function SelectClosestItemSelector(posX, posY) {
     const selector = (items) => {
         let bestIndex = 0;
-        let bestDistanceSq = 999999;
+        let bestDistanceSq = Number.MAX_VALUE;
         for (let index = 0; index < items.length; ++index) {
             const rect = new BoundingRect(items[index]);
             const x = rect.centerX - posX;

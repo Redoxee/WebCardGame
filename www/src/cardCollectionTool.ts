@@ -23,7 +23,7 @@ interface ICardCollection extends HTMLElement {
 }
 
 interface ICardCollectionParameters {
-	itemStyle : string|null
+	itemStyle? : string
 }
 
 function setupCardCollection(collectionELement : HTMLElement, params : ICardCollectionParameters) {
@@ -57,19 +57,43 @@ function setupCardCollection(collectionELement : HTMLElement, params : ICardColl
 			const newItem = cardCollection.itemPool.pop()!;
 			cardCollection.appendChild(newItem);
 			cardCollection.itemInUse.push(newItem);
-			newItem.appendChild(document.createTextNode(uniqueId()));
+			
+			const reservingIndex = selector(cardCollection.itemInUse);
+			
+			const numberOfItems = cardCollection.itemInUse.length;
+			for (let index = numberOfItems - 2; index >= reservingIndex; --index) {
+				cardCollection.itemInUse[index + 1].assignedCard = cardCollection.itemInUse[index].assignedCard;
+			}
+			
+			cardCollection.reservingItem = cardCollection.itemInUse[reservingIndex];
+			cardCollection.reservingItem.index = reservingIndex;
+			cardCollection.reservingItem.assignedCard = null;
+
+			cardCollection.bounds.Recompute();
 		}
-		
-		// determine the slot index
-		// TODO : somethings buggy here, if the collection was already reserving we might loose a card wut ?
-		const reservingIndex = selector(cardCollection.itemInUse);
-		for(let index = cardCollection.itemInUse.length - 1; index > reservingIndex; --index) {
-			cardCollection.itemInUse[index].assignedCard = cardCollection.itemInUse[index - 1].assignedCard;
+		else {
+			const reservingIndex = selector(cardCollection.itemInUse);
+			const previousEmptyIndex = cardCollection.reservingItem.index;
+			const numberOfItems = cardCollection.itemInUse.length;
+			if (reservingIndex !== previousEmptyIndex) {
+
+				if (reservingIndex > previousEmptyIndex) {
+					for (let index = previousEmptyIndex; index < (reservingIndex); ++index) {
+						cardCollection.itemInUse[index].assignedCard = cardCollection.itemInUse[index + 1].assignedCard;
+					}
+				}
+				else {
+					for (let index = previousEmptyIndex; index > (reservingIndex); --index) {
+						cardCollection.itemInUse[index].assignedCard = cardCollection.itemInUse[index - 1].assignedCard;
+					}
+				}
+
+				cardCollection.reservingItem = cardCollection.itemInUse[reservingIndex];
+				cardCollection.reservingItem.index = reservingIndex;
+				cardCollection.reservingItem.assignedCard = null;
+			}
 		}
 
-		cardCollection.reservingItem = cardCollection.itemInUse[reservingIndex];
-		cardCollection.reservingItem.assignedCard = null;
-		cardCollection.reservingItem.index = reservingIndex;
 		cardCollection.SlideAllCardsToAssignedItems();
 	};
 
@@ -78,7 +102,7 @@ function setupCardCollection(collectionELement : HTMLElement, params : ICardColl
 			console.warn('Trying to assign card but no slot reserved!');
 			return;
 		}
-
+		
 		cardCollection.reservingItem.assignedCard = card;
 		
 		const itemRect = new BoundingRect(cardCollection.reservingItem);
@@ -87,7 +111,8 @@ function setupCardCollection(collectionELement : HTMLElement, params : ICardColl
 			new Vec2(itemRect.centerX, itemRect.centerY),
 			1,
 			BezierPreset.EaseInOut);
-
+		
+		card.style.zIndex = cardCollection.reservingItem.index.toString();
 		cardCollection.reservingItem = null;
 	};
 
@@ -110,7 +135,7 @@ function setupCardCollection(collectionELement : HTMLElement, params : ICardColl
 	};
 
 	cardCollection.SlideAllCardsToAssignedItems = ()=>{
-		cardCollection.itemInUse.forEach(item => {
+		cardCollection.itemInUse.forEach((item, index) => {
 			if(item.assignedCard) {
 				const itemRect = new BoundingRect(item);
 				item.assignedCard.lerpAnimator.startAnimation(
@@ -118,6 +143,7 @@ function setupCardCollection(collectionELement : HTMLElement, params : ICardColl
 					new Vec2(itemRect.centerX, itemRect.centerY),
 					1,
 					BezierPreset.EaseInOut);
+				item.assignedCard.style.zIndex = index.toString();
 			}
 		});
 	};
@@ -128,7 +154,7 @@ function setupCardCollection(collectionELement : HTMLElement, params : ICardColl
 function SelectClosestItemSelector(posX : number, posY : number) {
 	const selector = (items : ICardCollectionItem[]) : number => {
 		let bestIndex = 0;
-		let bestDistanceSq = 999999;
+		let bestDistanceSq = Number.MAX_VALUE;
 		for (let index = 0; index < items.length; ++index) {
 			const rect = new BoundingRect(items[index]);
 			const x = rect.centerX - posX;
