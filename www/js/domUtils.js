@@ -1,3 +1,4 @@
+import { Vec2 } from './vec';
 let nextUniqueId = 1;
 function uniqueId() {
     const id = `id-${nextUniqueId.toString(16)}`;
@@ -20,8 +21,7 @@ class BoundingRect {
         this.right = box.right + window.pageXOffset;
         this.bottom = box.bottom + window.pageYOffset;
         this.left = box.left + window.pageXOffset;
-        this.centerX = box.left + window.pageXOffset + (box.right - box.left) / 2;
-        this.centerY = box.top + window.pageYOffset + (box.bottom - box.top) / 2;
+        this.centerPosition = new Vec2(box.left + window.pageXOffset + (box.right - box.left) / 2, box.top + window.pageYOffset + (box.bottom - box.top) / 2);
         this.width = box.right - box.left;
         this.height = box.top - box.bottom;
     }
@@ -31,8 +31,8 @@ class BoundingRect {
         this.right = box.right + window.pageXOffset;
         this.bottom = box.bottom + window.pageYOffset;
         this.left = box.left + window.pageXOffset;
-        this.centerX = box.left + window.pageXOffset + (box.right - box.left) / 2;
-        this.centerY = box.top + window.pageYOffset + (box.bottom - box.top) / 2;
+        this.centerPosition.x = box.left + window.pageXOffset + (box.right - box.left) / 2;
+        this.centerPosition.y = box.top + window.pageYOffset + (box.bottom - box.top) / 2;
         this.width = box.right - box.left;
         this.height = box.top - box.bottom;
     }

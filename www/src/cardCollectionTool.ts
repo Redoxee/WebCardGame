@@ -6,6 +6,7 @@ import { BezierPreset } from './math';
 interface ICardCollectionItem extends HTMLDivElement {
 	assignedCard : ICardPresentation|null;
 	index : number;
+	bounds : BoundingRect;
 }
 
 type SlotIndexSelector = (availableSlots : ICardCollectionItem[]) => number;
@@ -22,16 +23,18 @@ interface ICardCollection extends HTMLElement {
 	ContainsCard : (card : ICardPresentation) => boolean;
 	DetachCard : (card : ICardPresentation) => void;
 	SlideAllCardsToAssignedItems : ()=>void;
+	InsertCardInstant : (card : ICardPresentation, index : number)=>void;
+	PushCardInstant : (card : ICardPresentation)=>void;
 }
 
 interface ICardCollectionParameters {
-	itemStyle? : string
+	itemStyle? : string,
 }
 
 function setupCardCollection(collectionELement : HTMLElement, params : ICardCollectionParameters) {
 	const cardCollection = collectionELement as ICardCollection;
 
-	const itemPoolSize = 30;
+	const itemPoolSize = 100;
 
 	cardCollection.itemPool = [];
 	cardCollection.itemInUse = [];
@@ -50,6 +53,7 @@ function setupCardCollection(collectionELement : HTMLElement, params : ICardColl
 
 	for (let index = 0; index < itemPoolSize; ++index) {
 		const pooledItem = document.createElement('div')!as ICardCollectionItem;
+		pooledItem.bounds = new BoundingRect(pooledItem);
 		pooledItem.classList.add(itemStyleClass);
 		cardCollection.itemPool.push(pooledItem)
 	}
@@ -72,11 +76,12 @@ function setupCardCollection(collectionELement : HTMLElement, params : ICardColl
 			cardCollection.reservingItem.assignedCard = null;
 
 			cardCollection.bounds.Recompute();
+			cardCollection.SlideAllCardsToAssignedItems();
 		}
 		else {
 			const reservingIndex = selector(cardCollection.itemInUse);
 			const previousEmptyIndex = cardCollection.reservingItem.index;
-			const numberOfItems = cardCollection.itemInUse.length;
+			
 			if (reservingIndex !== previousEmptyIndex) {
 
 				if (reservingIndex > previousEmptyIndex) {
@@ -93,10 +98,10 @@ function setupCardCollection(collectionELement : HTMLElement, params : ICardColl
 				cardCollection.reservingItem = cardCollection.itemInUse[reservingIndex];
 				cardCollection.reservingItem.index = reservingIndex;
 				cardCollection.reservingItem.assignedCard = null;
+				cardCollection.SlideAllCardsToAssignedItems();
 			}
 		}
 
-		cardCollection.SlideAllCardsToAssignedItems();
 	};
 
 	cardCollection.AssignCardToReservation = (card : ICardPresentation) => {
@@ -107,12 +112,12 @@ function setupCardCollection(collectionELement : HTMLElement, params : ICardColl
 		
 		cardCollection.reservingItem.assignedCard = card;
 		
-		const itemRect = new BoundingRect(cardCollection.reservingItem);
+		cardCollection.reservingItem.bounds.Recompute();
 		card.lerpAnimator.startAnimation(
 			cardCollection.reservingItem.assignedCard.currentPosition, 
-			new Vec2(itemRect.centerX, itemRect.centerY),
+			cardCollection.reservingItem.bounds.centerPosition,
 			1,
-			BezierPreset.EaseInOut);
+			BezierPreset.Linear);
 		
 		card.style.zIndex = cardCollection.reservingItem.index.toString();
 		cardCollection.reservingItem = null;
@@ -139,10 +144,12 @@ function setupCardCollection(collectionELement : HTMLElement, params : ICardColl
 	cardCollection.SlideAllCardsToAssignedItems = ()=>{
 		cardCollection.itemInUse.forEach((item, index) => {
 			if(item.assignedCard) {
-				const itemRect = new BoundingRect(item);
+				item.bounds.Recompute();
+				// item.assignedCard.SetPosition(item.bounds.centerPosition);
+				const b = new BoundingRect(item.assignedCard);
 				item.assignedCard.lerpAnimator.startAnimation(
 					item.assignedCard.currentPosition, 
-					new Vec2(itemRect.centerX, itemRect.centerY),
+					item.bounds.centerPosition,
 					1,
 					BezierPreset.EaseInOut);
 				item.assignedCard.style.zIndex = index.toString();
@@ -152,7 +159,7 @@ function setupCardCollection(collectionELement : HTMLElement, params : ICardColl
 
 	cardCollection.ContainsCard = (card : ICardPresentation) => {
 		return cardCollection.itemInUse.find((el)=>el.assignedCard === card) !== undefined;
-	}
+	};
 
 	cardCollection.DetachCard = (card) => {
 		const index = cardCollection.itemInUse.findIndex((el)=>el.assignedCard === card);
@@ -164,6 +171,26 @@ function setupCardCollection(collectionELement : HTMLElement, params : ICardColl
 		cardCollection.removeChild(cardCollection.itemInUse[index]);
 		cardCollection.itemInUse.splice(index, 1);
 		cardCollection.SlideAllCardsToAssignedItems();
+	};
+
+	cardCollection.InsertCardInstant = (card : ICardPresentation, index : number) => {
+		const newItem = cardCollection.itemPool.pop()!;
+		cardCollection.itemInUse.splice(index,0 , newItem);
+		cardCollection.insertBefore(newItem, cardCollection.childNodes[index + 1]);
+		newItem.assignedCard = card;
+
+		cardCollection.itemInUse.forEach((item)=>{
+			if(!item.assignedCard){
+				return;
+			}
+
+			item.bounds.Recompute();
+			item.assignedCard.SetPosition(item.bounds.centerPosition);
+		});
+	};
+
+	cardCollection.PushCardInstant = (card : ICardPresentation) => {
+		cardCollection.InsertCardInstant(card, cardCollection.itemInUse.length);
 	}
 
 	return cardCollection;
@@ -174,9 +201,9 @@ function SelectClosestItemSelector(posX : number, posY : number) {
 		let bestIndex = 0;
 		let bestDistanceSq = Number.MAX_VALUE;
 		for (let index = 0; index < items.length; ++index) {
-			const rect = new BoundingRect(items[index]);
-			const x = rect.centerX - posX;
-			const y = rect.centerY - posY;
+			items[index].bounds.Recompute();
+			const x = items[index].bounds.centerPosition.x - posX;
+			const y = items[index].bounds.centerPosition.y - posY;
 			const distanceSq = x * x + y * y;
 			if (distanceSq < bestDistanceSq) {
 				bestDistanceSq = distanceSq;

@@ -1,9 +1,8 @@
-import { Vec2 } from './vec';
 import { addCustomStyle, BoundingRect } from './domUtils';
 import { BezierPreset } from './math';
 function setupCardCollection(collectionELement, params) {
     const cardCollection = collectionELement;
-    const itemPoolSize = 30;
+    const itemPoolSize = 100;
     cardCollection.itemPool = [];
     cardCollection.itemInUse = [];
     cardCollection.reservingItem = null;
@@ -18,6 +17,7 @@ function setupCardCollection(collectionELement, params) {
     });
     for (let index = 0; index < itemPoolSize; ++index) {
         const pooledItem = document.createElement('div');
+        pooledItem.bounds = new BoundingRect(pooledItem);
         pooledItem.classList.add(itemStyleClass);
         cardCollection.itemPool.push(pooledItem);
     }
@@ -35,11 +35,11 @@ function setupCardCollection(collectionELement, params) {
             cardCollection.reservingItem.index = reservingIndex;
             cardCollection.reservingItem.assignedCard = null;
             cardCollection.bounds.Recompute();
+            cardCollection.SlideAllCardsToAssignedItems();
         }
         else {
             const reservingIndex = selector(cardCollection.itemInUse);
             const previousEmptyIndex = cardCollection.reservingItem.index;
-            const numberOfItems = cardCollection.itemInUse.length;
             if (reservingIndex !== previousEmptyIndex) {
                 if (reservingIndex > previousEmptyIndex) {
                     for (let index = previousEmptyIndex; index < (reservingIndex); ++index) {
@@ -54,9 +54,9 @@ function setupCardCollection(collectionELement, params) {
                 cardCollection.reservingItem = cardCollection.itemInUse[reservingIndex];
                 cardCollection.reservingItem.index = reservingIndex;
                 cardCollection.reservingItem.assignedCard = null;
+                cardCollection.SlideAllCardsToAssignedItems();
             }
         }
-        cardCollection.SlideAllCardsToAssignedItems();
     };
     cardCollection.AssignCardToReservation = (card) => {
         if (!cardCollection.reservingItem) {
@@ -64,8 +64,8 @@ function setupCardCollection(collectionELement, params) {
             return;
         }
         cardCollection.reservingItem.assignedCard = card;
-        const itemRect = new BoundingRect(cardCollection.reservingItem);
-        card.lerpAnimator.startAnimation(cardCollection.reservingItem.assignedCard.currentPosition, new Vec2(itemRect.centerX, itemRect.centerY), 1, BezierPreset.EaseInOut);
+        cardCollection.reservingItem.bounds.Recompute();
+        card.lerpAnimator.startAnimation(cardCollection.reservingItem.assignedCard.currentPosition, cardCollection.reservingItem.bounds.centerPosition, 1, BezierPreset.Linear);
         card.style.zIndex = cardCollection.reservingItem.index.toString();
         cardCollection.reservingItem = null;
     };
@@ -86,8 +86,10 @@ function setupCardCollection(collectionELement, params) {
     cardCollection.SlideAllCardsToAssignedItems = () => {
         cardCollection.itemInUse.forEach((item, index) => {
             if (item.assignedCard) {
-                const itemRect = new BoundingRect(item);
-                item.assignedCard.lerpAnimator.startAnimation(item.assignedCard.currentPosition, new Vec2(itemRect.centerX, itemRect.centerY), 1, BezierPreset.EaseInOut);
+                item.bounds.Recompute();
+                // item.assignedCard.SetPosition(item.bounds.centerPosition);
+                const b = new BoundingRect(item.assignedCard);
+                item.assignedCard.lerpAnimator.startAnimation(item.assignedCard.currentPosition, item.bounds.centerPosition, 1, BezierPreset.EaseInOut);
                 item.assignedCard.style.zIndex = index.toString();
             }
         });
@@ -105,6 +107,22 @@ function setupCardCollection(collectionELement, params) {
         cardCollection.itemInUse.splice(index, 1);
         cardCollection.SlideAllCardsToAssignedItems();
     };
+    cardCollection.InsertCardInstant = (card, index) => {
+        const newItem = cardCollection.itemPool.pop();
+        cardCollection.itemInUse.splice(index, 0, newItem);
+        cardCollection.insertBefore(newItem, cardCollection.childNodes[index + 1]);
+        newItem.assignedCard = card;
+        cardCollection.itemInUse.forEach((item) => {
+            if (!item.assignedCard) {
+                return;
+            }
+            item.bounds.Recompute();
+            item.assignedCard.SetPosition(item.bounds.centerPosition);
+        });
+    };
+    cardCollection.PushCardInstant = (card) => {
+        cardCollection.InsertCardInstant(card, cardCollection.itemInUse.length);
+    };
     return cardCollection;
 }
 function SelectClosestItemSelector(posX, posY) {
@@ -112,9 +130,9 @@ function SelectClosestItemSelector(posX, posY) {
         let bestIndex = 0;
         let bestDistanceSq = Number.MAX_VALUE;
         for (let index = 0; index < items.length; ++index) {
-            const rect = new BoundingRect(items[index]);
-            const x = rect.centerX - posX;
-            const y = rect.centerY - posY;
+            items[index].bounds.Recompute();
+            const x = items[index].bounds.centerPosition.x - posX;
+            const y = items[index].bounds.centerPosition.y - posY;
             const distanceSq = x * x + y * y;
             if (distanceSq < bestDistanceSq) {
                 bestDistanceSq = distanceSq;

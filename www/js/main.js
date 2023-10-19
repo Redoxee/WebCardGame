@@ -29,7 +29,7 @@ function runMain() {
             shadowDistance: 5
         };
         const presentationCard = addCardPresentationCapability(cardElements, cardOptions);
-        presentationCard.setOrientation(Vec2.Zero);
+        presentationCard.SetOrientation(Vec2.Zero);
         return presentationCard;
     }
     const debugCard = makeCard(container);
@@ -37,11 +37,12 @@ function runMain() {
     function startInput(card) {
         draggedObject = card;
         if (cardCollection.ContainsCard(card)) {
-            console.log('detaching');
             cardCollection.DetachCard(card);
+            cardCollection.ReserveSlot(SelectClosestItemSelector(card.currentPosition.x, card.currentPosition.y));
+            hoveredCardCollection = cardCollection;
         }
         card.style.zIndex = draggedZindex.toString();
-        debugCard.setSmoothOrientation(false);
+        debugCard.SetSmoothOrientation(false);
     }
     function endInput() {
         if (draggedObject) {
@@ -78,13 +79,12 @@ function runMain() {
     let currentIndex = 0;
     testButton.addEventListener('click', (_ev) => {
         currentIndex = (currentIndex + 1) % targets.length;
-        const startPosition = new BoundingRect(debugCard.root);
         const targetPosition = new BoundingRect(targets[currentIndex]);
-        debugCard.lerpAnimator.startAnimation(new Vec2(startPosition.centerX, startPosition.centerY), new Vec2(targetPosition.centerX, targetPosition.centerY), .65, BezierPreset.EaseInOut);
+        debugCard.lerpAnimator.startAnimation(debugCard.currentPosition, targetPosition.centerPosition, .65, BezierPreset.EaseInOut);
     });
     function boardMove(card, posX, posY) {
         const startPosition = new BoundingRect(card.root);
-        const start = new Vec2(startPosition.centerX, startPosition.centerY);
+        const start = startPosition.centerPosition;
         const end = new Vec2(posX, posY);
         const travelLength = Vec2.sub(end, start).length();
         const lerpLowerBound = 45;
@@ -150,6 +150,9 @@ function runMain() {
             }
             hoveredCardCollection = null;
         }
+    });
+    testCards.forEach((el) => {
+        cardCollection.PushCardInstant(el);
     });
 }
 window.addEventListener('load', () => {

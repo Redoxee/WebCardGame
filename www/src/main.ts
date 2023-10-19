@@ -38,7 +38,7 @@ function runMain() {
 		};
 		
 		const presentationCard = addCardPresentationCapability(cardElements, cardOptions);
-		presentationCard.setOrientation(Vec2.Zero);
+		presentationCard.SetOrientation(Vec2.Zero);
 		return presentationCard;
 	}
 
@@ -49,12 +49,13 @@ function runMain() {
 	function startInput(card : ICardPresentation) {
 		draggedObject = card;
 		if (cardCollection.ContainsCard(card)) {
-			console.log('detaching');
 			cardCollection.DetachCard(card);
+			cardCollection.ReserveSlot(SelectClosestItemSelector(card.currentPosition.x, card.currentPosition.y));
+			hoveredCardCollection = cardCollection;
 		}
 
 		card.style.zIndex = draggedZindex.toString();
-		debugCard.setSmoothOrientation(false);
+		debugCard.SetSmoothOrientation(false);
 	}
 
 	function endInput() {
@@ -101,11 +102,10 @@ function runMain() {
 
 	testButton.addEventListener('click', (_ev)=>{
 		currentIndex = (currentIndex + 1) % targets.length;
-		const startPosition = new BoundingRect(debugCard.root)
 		const targetPosition = new BoundingRect(targets[currentIndex]);
 		debugCard.lerpAnimator.startAnimation(
-			new Vec2(startPosition.centerX, startPosition.centerY),
-			new Vec2(targetPosition.centerX, targetPosition.centerY),
+			debugCard.currentPosition,
+			targetPosition.centerPosition,
 			.65,
 			BezierPreset.EaseInOut
 			);
@@ -113,7 +113,7 @@ function runMain() {
 		
 	function boardMove(card : ICardPresentation,posX : number, posY : number) {
 		const startPosition = new BoundingRect(card.root);
-		const start = new Vec2(startPosition.centerX, startPosition.centerY);
+		const start = startPosition.centerPosition;
 		const end = new Vec2(posX, posY);
 		
 		const travelLength = Vec2.sub(end, start).length();
@@ -143,12 +143,12 @@ function runMain() {
 			end,
 			lerpedSpeed,
 			BezierPreset.Linear);
-		}
+	}
 		
-		board.addEventListener('mousemove', (event)=>{
-			if(draggedObject) {
-				boardMove(draggedObject, event.clientX , event.clientY);
-			}
+	board.addEventListener('mousemove', (event) => {
+		if(draggedObject) {
+			boardMove(draggedObject, event.clientX , event.clientY);
+		}
 	});
 
 	board.addEventListener('touchmove', (event)=>{
@@ -200,6 +200,10 @@ function runMain() {
 
 			hoveredCardCollection = null;
 		}
+	});
+
+	testCards.forEach((el)=> {
+		cardCollection.PushCardInstant(el);
 	});
 }
 
