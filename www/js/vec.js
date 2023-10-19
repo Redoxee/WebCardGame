@@ -9,6 +9,9 @@ class Vec2 {
             this.y = y;
         }
     }
+    clone() {
+        return new Vec2(this.x, this.y);
+    }
     toString() {
         return `(${this.x}, ${this.y})`;
     }
@@ -45,6 +48,8 @@ class Vec2 {
     }
 }
 Vec2.Zero = new Vec2(0, 0);
+Vec2.Up = new Vec2(0, 1);
+Vec2.Right = new Vec2(1, 0);
 class Vec3 {
     constructor(x, y, z) {
         if (x === null) {

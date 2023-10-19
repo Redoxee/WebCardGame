@@ -2,7 +2,9 @@ class Vec2 {
 	x : number;
 	y: number;
 
-	static Zero = new Vec2(0, 0)
+	static Zero = new Vec2(0, 0);
+	static Up = new Vec2(0, 1);
+	static Right = new Vec2(1, 0);
 
 	constructor(x : number, y : number) {
 		if ( x === null)
@@ -13,6 +15,10 @@ class Vec2 {
 			this.x = x;
 			this.y = y;
 		}
+	}
+
+	clone() {
+		return new Vec2(this.x, this.y);
 	}
 
 	toString() : string {

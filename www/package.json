@@ -22,9 +22,6 @@
     "url": "https://github.com/Redoxee/WebCardGame/issues"
   },
   "homepage": "https://github.com/Redoxee/WebCardGame#readme",
-  "dependencies": {
-    "uuid": "^9.0.1"
-  },
   "devDependencies": {
     "@types/uuid": "^9.0.4",
     "parcel": "^2.9.3"
