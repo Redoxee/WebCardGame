@@ -5,7 +5,7 @@ body {
 	height: 100vh;
 	background: rgb(4,2,42);
 	background: linear-gradient(0deg, rgba(4,2,42,1) 0%, rgba(39,39,97,1) 29%, rgba(2,2,60,1) 100%);
-	touch-action: manipulation;
+	touch-action: none;
 }
 
 #game-board {
