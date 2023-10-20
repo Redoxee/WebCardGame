@@ -5,31 +5,26 @@
 		<link rel="stylesheet" type="text/css" href="css/style.css" />	  
 	</head>
 	<style>
+		#game-board {
+			display: flex;
+			flex-direction: row;
+			flex-wrap: wrap;
+			align-items: center;
+			gap : 1em;
+		}
+
+		#slide-test {
+			display: flex;
+			flex-direction: row;
+			flex-wrap: wrap;
+			gap: 40%;
+			padding:3em;
+		}
+
 		.target {
 			background-color: burlywood;
 			height: 3px;
 			width: 3px;
-			position: absolute;
-		}
-
-		#target-1 {
-			top: 20em;
-			left: 20em;
-		}
-
-		#target-2 {
-			top: 20em;
-			left: 40em;
-		}
-
-		#target-3 {
-			top: 40em;
-			left: 60em;
-		}
-
-		#target-4 {
-			top: 40em;
-			left: 20em;
 		}
 
 		#mock-collection {
@@ -45,23 +40,51 @@
 			align-items: center;
 			gap : .5em;
 		}
+
+		#flip-test {
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			justify-content: center;
+		}
+
+		#flip-collection {
+			width: 6em;
+			height: 9em;
+		}
+
+		.half-width {
+			width: 45%;
+		}
+
+		.third-height {
+			height: 33%;
+		}
+
+		.border-white {
+			border: solid white 3px;
+		}
 	</style>
 	<body>
 		<div id="game-board">
-			<div id="target-1" class="target"></div>
-			<div id="target-2" class="target"></div>
-			<div id="target-3" class="target"></div>
-			<div id="target-4" class="target"></div>
-
-			<div class="collection" id ="mock-collection">
+			<div id="slide-test" class="half-width border-white third-height">
+				<div id="target-1" class="target"></div>
+				<div id="target-2" class="target"></div>
+				<div id="target-3" class="target"></div>
+				<div id="target-4" class="target"></div>
+				<button id="slide-button">Slide card</button>
 			</div>
 
-			<div id="flip-test">
-				<div id="flip-collection"></div>
+			<div id="collection-test" class="half-width border-white third-height">
+				<div class="collection" id ="mock-collection">
+				</div>
+			</div>
+
+			<div id="flip-test" class="half-width border-white third-height">
+				<div id="flip-collection" class="border-white"></div>
 				<button id="flip-button"> Flip!</button>
 			</div>
 
-			<button id="test-button">TEST</button>
 			<div id='card-root'>
 				<div id='card'>
 					<div id = 'card-item'>

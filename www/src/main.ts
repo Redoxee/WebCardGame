@@ -90,19 +90,15 @@ function runMain() {
 
 	setupCardInput(debugCard);
 
-	const testButton = document.getElementById('test-button') as HTMLButtonElement;
-	const targets = [
-		document.getElementById('target-1')!,
-		document.getElementById('target-2')!,
-		document.getElementById('target-3')!,
-		document.getElementById('target-4')!,
-	];
+	const testButton = document.getElementById('slide-button') as HTMLButtonElement;
+	
+	const targets = document.getElementById('slide-test')!.getElementsByClassName('target');
 
 	let currentIndex = 0;
 
 	testButton.addEventListener('click', (_ev)=>{
 		currentIndex = (currentIndex + 1) % targets.length;
-		const targetPosition = new BoundingRect(targets[currentIndex]);
+		const targetPosition = new BoundingRect(targets.item(currentIndex) as HTMLElement);
 		debugCard.lerpAnimator.startAnimation(
 			debugCard.currentPosition,
 			targetPosition.centerPosition,

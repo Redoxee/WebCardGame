@@ -112,6 +112,7 @@ function setupCardCollection(collectionELement, params) {
         cardCollection.itemInUse.splice(index, 0, newItem);
         cardCollection.insertBefore(newItem, cardCollection.childNodes[index + 1]);
         newItem.assignedCard = card;
+        cardCollection.bounds.Recompute();
         cardCollection.itemInUse.forEach((item) => {
             if (!item.assignedCard) {
                 return;
