@@ -36,10 +36,9 @@ function runMain() {
     let draggedObject = null;
     function startInput(card) {
         draggedObject = card;
-        if (cardCollection.ContainsCard(card)) {
-            cardCollection.DetachCard(card);
-            cardCollection.ReserveSlot(SelectClosestItemSelector(card.currentPosition.x, card.currentPosition.y));
-            hoveredCardCollection = cardCollection;
+        if (hoveredCardCollection && hoveredCardCollection.ContainsCard(card)) {
+            hoveredCardCollection.DetachCard(card);
+            hoveredCardCollection.ReserveSlot(SelectClosestItemSelector(card.currentPosition.x, card.currentPosition.y));
         }
         card.style.zIndex = draggedZindex.toString();
         debugCard.SetSmoothOrientation(false);
@@ -124,31 +123,42 @@ function runMain() {
         setupCardInput(testCard);
         testCards.push(testCard);
     }
-    const cardCollectionElement = document.getElementById('mock-collection');
     const cardCollectionParams = {
         itemStyle: "width : 5em; height: 5em",
     };
-    const cardCollection = setupCardCollection(cardCollectionElement, cardCollectionParams);
+    const allCardCollections = [];
+    const allCardCollectionElements = document.getElementsByClassName('card-collection');
+    for (let index = 0; index < allCardCollectionElements.length; ++index) {
+        const element = allCardCollectionElements.item(index);
+        allCardCollections.push(setupCardCollection(element, cardCollectionParams));
+    }
     board.addEventListener('mousemove', (ev) => {
         const mousePosition = new Vec2(ev.clientX, ev.clientY);
-        if (cardCollection.bounds.Contains(mousePosition)) {
-            if (!cardCollection.reservingItem) {
-                hoveredCardCollection = cardCollection;
-            }
-            if (draggedObject) {
-                cardCollection.ReserveSlot(SelectClosestItemSelector(ev.clientX, ev.clientY));
+        let currentHoveredCollection = null;
+        for (let index = 0; index < allCardCollections.length; ++index) {
+            const collection = allCardCollections[index];
+            if (collection.bounds.Contains(mousePosition)) {
+                currentHoveredCollection = collection;
+                break;
             }
         }
-        else {
+        if (currentHoveredCollection !== hoveredCardCollection) {
             if (hoveredCardCollection && hoveredCardCollection.reservingItem) {
                 hoveredCardCollection.CancelReservation();
             }
-            hoveredCardCollection = null;
+            hoveredCardCollection = currentHoveredCollection;
+        }
+        if (currentHoveredCollection && draggedObject) {
+            currentHoveredCollection.ReserveSlot(SelectClosestItemSelector(ev.clientX, ev.clientY));
         }
     });
-    testCards.forEach((el) => {
-        cardCollection.PushCardInstant(el);
-    });
+    {
+        const cardCollectionElement = document.getElementById('mock-collection');
+        const cardCollection = cardCollectionElement;
+        testCards.forEach((el) => {
+            cardCollection.PushCardInstant(el);
+        });
+    }
 }
 window.addEventListener('load', () => {
     runMain();
