@@ -51,7 +51,6 @@ class CardLerpAnimation extends CardAnimation {
         this.p0 = Vec2.Zero.clone();
         this.p1 = Vec2.Zero.clone();
         this.travel = Vec2.Zero.clone();
-        this.endTime = 0;
         this.elapsedTime = 0;
         this.startTime = -1;
         this.bezierParams = BezierPreset.DefaultBezierParams;
@@ -65,7 +64,6 @@ class CardLerpAnimation extends CardAnimation {
         const distance = (Vec2.sub(p1, p0).length());
         this.duration = distance / speed;
         this.startTime = performance.now() - frameDelay;
-        this.endTime = this.startTime + this.duration;
         this.elapsedTime = 0;
         this.travel = Vec2.sub(p1, p0);
         this.direction = this.travel.norm();
@@ -81,7 +79,7 @@ class CardLerpAnimation extends CardAnimation {
             this.target.root.style.left = `${this.p1.x}px`;
             this.target.root.style.top = `${this.p1.y}px`;
             this.target.currentPosition = this.p1;
-            this.target.SetOrientation(Vec2.Zero);
+            this.target.LookToward(Vec2.Zero);
             this.target.dispatchEvent(this.endEvent);
             return true;
         }
@@ -94,7 +92,38 @@ class CardLerpAnimation extends CardAnimation {
         this.target.currentPosition = currentPos;
         // this.target.dispatchEvent(new CustomEvent('animationFrame'));
         const transformedAcceleration = cubicInterpolationBezierFirstDerivative(t, this.bezierParams).scale(rotationFactor);
-        this.target.SetOrientation(this.direction.scale(transformedAcceleration.y));
+        this.target.LookToward(this.direction.scale(transformedAcceleration.y));
+        return false;
+    }
+}
+class CardFlipAnimation extends CardAnimation {
+    constructor(target) {
+        super(target);
+        this.duration = 0;
+        this.endTime = 0;
+        this.startTime = 0;
+        this.elapsedTime = 0;
+    }
+    StartAnimation(duration) {
+        this.duration = duration;
+        this.startTime = performance.now() - frameDelay;
+        this.endTime = this.startTime + duration;
+        this.elapsedTime = 0;
+        if (!cardAnimations.find((e) => e.id === this.id)) {
+            cardAnimations.push(this);
+        }
+        this.target.dispatchEvent(this.startEvent);
+    }
+    AnimationFrame(dt) {
+        this.elapsedTime += dt;
+        if (this.elapsedTime > this.duration || this.duration === 0) {
+            this.target.dispatchEvent(this.endEvent);
+            console.log('ended');
+            return true;
+        }
+        const t = this.elapsedTime / this.duration;
+        console.log(t);
+        this.target.SetRotation(t * Math.PI, 0);
         return false;
     }
 }
@@ -115,15 +144,18 @@ function addCardPresentationCapability(cardElements, options) {
         card.root.style.top = `${position.y}px`;
         card.currentPosition = position.clone();
     };
-    card.SetOrientation = (position) => {
+    card.LookToward = (position) => {
         const atanX = Math.atan2(Math.abs(position.x), options.simHeight);
         const angleX = position.x === 0 ? 0 : position.x > 0 ? atanX : -atanX;
         const atanY = Math.atan2(Math.abs(position.y), options.simHeight);
         const angleY = position.y === 0 ? 0 : position.y > 0 ? -atanY : atanY;
+        card.SetRotation(angleX, angleY);
+    };
+    card.SetRotation = (ax, ay) => {
         // Rotating a vector up toward the viewer to the inclination of the card.
-        const normal = rotatePitchRoll(Vec3.Backward, angleX, angleY);
+        const normal = rotatePitchRoll(Vec3.Backward, ax, ay);
         const li = Math.pow(Vec3.dot(normal, options.lightDirection), options.lightPower);
-        cardElements.cardItem.style.transform = `rotateY(${angleX}rad) rotateX(${angleY}rad)`;
+        cardElements.cardItem.style.transform = `rotateY(${ax}rad) rotateX(${ay}rad)`;
         cardElements.shine.style.opacity = `${li * 100}%`;
         const unLi = Math.pow(Vec3.dot(normal, shadeDirection), options.lightPower);
         cardElements.shade.style.opacity = `${unLi * 100}%`;
@@ -150,8 +182,10 @@ function addCardPresentationCapability(cardElements, options) {
     };
     card.Flip = () => {
         card.isFlipped = !card.isFlipped;
+        card.flipAnimator.StartAnimation(1000);
     };
     card.lerpAnimator = new CardLerpAnimation(card, 100);
+    card.flipAnimator = new CardFlipAnimation(card);
     const bounds = new BoundingRect(card);
     card.currentPosition = bounds.centerPosition.clone();
     return card;

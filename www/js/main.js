@@ -30,7 +30,7 @@ function runMain() {
             shadowDistance: 5
         };
         const presentationCard = addCardPresentationCapability(cardElements, cardOptions);
-        presentationCard.SetOrientation(Vec2.Zero);
+        presentationCard.LookToward(Vec2.Zero);
         return presentationCard;
     }
     const debugCard = makeCard(container);
