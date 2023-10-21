@@ -32,7 +32,7 @@ interface ICardPresentation extends HTMLElement {
 	currentPosition : Vec2;
 	isFlipped : boolean;
 
-	SetOrientation(position : Vec2) : void;
+	LookToward(position : Vec2) : void;
 	SetZoom(zoom : number) : void;
 	SetSmoothOrientation(enabled : boolean) : void;
 	SetPosition(pos : Vec2) : void;
@@ -142,7 +142,7 @@ class CardLerpAnimation extends CardAnimation{
 			this.target.root.style.left = `${this.p1.x}px`;
 			this.target.root.style.top = `${this.p1.y}px`;
 			this.target.currentPosition = this.p1;
-			this.target.SetOrientation(Vec2.Zero);
+			this.target.LookToward(Vec2.Zero);
 			this.target.dispatchEvent(this.endEvent);
 			return true;
 		}
@@ -158,7 +158,7 @@ class CardLerpAnimation extends CardAnimation{
 		this.target.currentPosition = currentPos;
 		// this.target.dispatchEvent(new CustomEvent('animationFrame'));
 		const transformedAcceleration = cubicInterpolationBezierFirstDerivative(t, this.bezierParams).scale(rotationFactor);
-		this.target.SetOrientation(this.direction.scale(transformedAcceleration.y));
+		this.target.LookToward(this.direction.scale(transformedAcceleration.y));
 		return false;
 	}
 }
@@ -185,7 +185,7 @@ function addCardPresentationCapability(cardElements : ICardElements, options : I
 		card.currentPosition = position.clone();
 	};
 
-	card.SetOrientation = (position : Vec2) => {
+	card.LookToward = (position : Vec2) => {
 		const atanX = Math.atan2(Math.abs(position.x), options.simHeight);
 		const angleX = position.x === 0 ? 0 : position.x > 0 ? atanX : -atanX;
 		const atanY = Math.atan2(Math.abs(position.y), options.simHeight);
