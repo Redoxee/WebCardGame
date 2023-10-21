@@ -65,7 +65,7 @@ function setupCardCollection(collectionELement, params) {
         }
         cardCollection.reservingItem.assignedCard = card;
         cardCollection.reservingItem.bounds.Recompute();
-        card.lerpAnimator.startAnimation(cardCollection.reservingItem.assignedCard.currentPosition, cardCollection.reservingItem.bounds.centerPosition, 1, BezierPreset.Linear);
+        card.lerpAnimator.StartAnimation(cardCollection.reservingItem.assignedCard.currentPosition, cardCollection.reservingItem.bounds.centerPosition, 1, BezierPreset.Linear);
         card.style.zIndex = cardCollection.reservingItem.index.toString();
         cardCollection.reservingItem = null;
     };
@@ -89,7 +89,7 @@ function setupCardCollection(collectionELement, params) {
                 item.bounds.Recompute();
                 // item.assignedCard.SetPosition(item.bounds.centerPosition);
                 const b = new BoundingRect(item.assignedCard);
-                item.assignedCard.lerpAnimator.startAnimation(item.assignedCard.currentPosition, item.bounds.centerPosition, 1, BezierPreset.EaseInOut);
+                item.assignedCard.lerpAnimator.StartAnimation(item.assignedCard.currentPosition, item.bounds.centerPosition, 1, BezierPreset.EaseInOut);
                 item.assignedCard.style.zIndex = index.toString();
             }
         });

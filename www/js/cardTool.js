@@ -8,6 +8,25 @@ function rotatePitchRoll(vec, pitch, roll) {
     const sr = Math.sin(roll);
     return new Vec3(vec.x * cp + vec.z * sp, vec.x * sp * sr + vec.y * cr - vec.z * sr * cp, -vec.x * sp * cr + vec.y * sr + vec.z * cp * cr);
 }
+class CardAnimation {
+    constructor(target) {
+        this.target = target;
+        this.id = uniqueId();
+        this.startEvent = new CustomEvent('cardAnimationStart');
+        this.endEvent = new CustomEvent('cardAnimationEnd');
+    }
+    StopAnimation() {
+        const index = cardAnimations.findIndex(e => e.id === this.id);
+        if (index < 0) {
+            return;
+        }
+        cardAnimations.splice(index, 1);
+        this.target.dispatchEvent(this.endEvent);
+    }
+    AnimationFrame(dt) {
+        throw new Error("methode not implemented");
+    }
+}
 let lastFrameTimeStamp = 0;
 let frameDelay = 0;
 const cardAnimations = [];
@@ -15,15 +34,18 @@ function cardAnimationCallback(timeStamp) {
     const currentFrameTimeStamp = performance.now();
     frameDelay = currentFrameTimeStamp - lastFrameTimeStamp;
     lastFrameTimeStamp = currentFrameTimeStamp;
-    cardAnimations.forEach(element => {
-        element.animationFrame(frameDelay);
-    });
+    for (let index = cardAnimations.length - 1; index > -1; --index) {
+        const animationFinished = cardAnimations[index].AnimationFrame(frameDelay);
+        if (animationFinished) {
+            cardAnimations.splice(index, 1);
+        }
+    }
     requestAnimationFrame(cardAnimationCallback);
 }
 cardAnimationCallback(performance.now());
-class CardLerpAnimation {
+class CardLerpAnimation extends CardAnimation {
     constructor(target, rotationFactor) {
-        this.target = target;
+        super(target);
         this.rotationFactor = rotationFactor;
         this.duration = 0;
         this.p0 = Vec2.Zero.clone();
@@ -35,11 +57,9 @@ class CardLerpAnimation {
         this.bezierParams = BezierPreset.DefaultBezierParams;
         this.direction = Vec2.Zero.clone();
         this.id = uniqueId();
-        this.startEvent = new CustomEvent('cardAnimationStart');
-        this.endEvent = new CustomEvent('cardAnimationEnd');
     }
     ;
-    startAnimation(p0, p1, speed, bezierParams) {
+    StartAnimation(p0, p1, speed, bezierParams) {
         this.p0 = p0.clone();
         this.p1 = p1.clone();
         const distance = (Vec2.sub(p1, p0).length());
@@ -55,16 +75,15 @@ class CardLerpAnimation {
         }
         this.target.dispatchEvent(this.startEvent);
     }
-    animationFrame(dt) {
+    AnimationFrame(dt) {
         this.elapsedTime += dt;
         if (this.elapsedTime > this.duration || this.duration === 0) {
             this.target.root.style.left = `${this.p1.x}px`;
             this.target.root.style.top = `${this.p1.y}px`;
             this.target.currentPosition = this.p1;
             this.target.SetOrientation(Vec2.Zero);
-            cardAnimations.splice(cardAnimations.findIndex((e) => e.id === this.id), 1);
             this.target.dispatchEvent(this.endEvent);
-            return;
+            return true;
         }
         const t = this.elapsedTime / this.duration;
         const rotationFactor = this.rotationFactor;
@@ -76,20 +95,14 @@ class CardLerpAnimation {
         // this.target.dispatchEvent(new CustomEvent('animationFrame'));
         const transformedAcceleration = cubicInterpolationBezierFirstDerivative(t, this.bezierParams).scale(rotationFactor);
         this.target.SetOrientation(this.direction.scale(transformedAcceleration.y));
-    }
-    stopAnimation() {
-        const index = cardAnimations.findIndex(e => e.id === this.id);
-        if (index < 0) {
-            return;
-        }
-        cardAnimations.splice(index, 1);
-        this.target.dispatchEvent(this.endEvent);
+        return false;
     }
 }
 function addCardPresentationCapability(cardElements, options) {
     const card = cardElements.root;
     card.root = cardElements.root;
     const zoomElement = cardElements.zoomable;
+    card.isFlipped = false;
     const shadowOffset = {
         x: options.shadowDistance * Vec3.dot(options.lightDirection, Vec3.Left),
         y: options.shadowDistance * Vec3.dot(options.lightDirection, Vec3.Down)
@@ -97,7 +110,7 @@ function addCardPresentationCapability(cardElements, options) {
     cardElements.cardItem.style.filter = `drop-shadow(${shadowOffset.x}px ${shadowOffset.y}px 5px black)`;
     const shadeDirection = new Vec3(-options.lightDirection.x, -options.lightDirection.y, options.lightDirection.z);
     card.SetPosition = (position) => {
-        card.lerpAnimator.stopAnimation();
+        card.lerpAnimator.StopAnimation();
         card.root.style.left = `${position.x}px`;
         card.root.style.top = `${position.y}px`;
         card.currentPosition = position.clone();
@@ -134,6 +147,9 @@ function addCardPresentationCapability(cardElements, options) {
                 cardElements.cardItem.classList.remove(smoothTransition);
             }
         }
+    };
+    card.Flip = () => {
+        card.isFlipped = !card.isFlipped;
     };
     card.lerpAnimator = new CardLerpAnimation(card, 100);
     const bounds = new BoundingRect(card);

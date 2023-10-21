@@ -4,6 +4,7 @@ import { uniqueId, BoundingRect } from './domUtils';
 import { BezierPreset } from './math';
 import { setupCardCollection, SelectClosestItemSelector } from './cardCollectionTool';
 function runMain() {
+    var _a;
     const board = document.getElementById('game-board');
     const container = document.getElementById('card-root');
     let hoveredCardCollection = null;
@@ -68,13 +69,21 @@ function runMain() {
         }, false);
     }
     setupCardInput(debugCard);
+    function DetachCardFromAnyCollection(card) {
+        allCardCollections.forEach(collection => {
+            if (collection.ContainsCard(card)) {
+                collection.DetachCard(card);
+            }
+        });
+    }
     const testButton = document.getElementById('slide-button');
     const targets = document.getElementById('slide-test').getElementsByClassName('target');
     let currentIndex = 0;
     testButton.addEventListener('click', (_ev) => {
         currentIndex = (currentIndex + 1) % targets.length;
         const targetPosition = new BoundingRect(targets.item(currentIndex));
-        debugCard.lerpAnimator.startAnimation(debugCard.currentPosition, targetPosition.centerPosition, .65, BezierPreset.EaseInOut);
+        DetachCardFromAnyCollection(debugCard);
+        debugCard.lerpAnimator.StartAnimation(debugCard.currentPosition, targetPosition.centerPosition, .65, BezierPreset.EaseInOut);
     });
     function boardMove(card, posX, posY) {
         const startPosition = new BoundingRect(card.root);
@@ -98,7 +107,7 @@ function runMain() {
         lp = lp * lp;
         // converting to speed
         const lerpedSpeed = (maxSpeed - minSpeed) * lp + minSpeed;
-        card.lerpAnimator.startAnimation(start, end, lerpedSpeed, BezierPreset.Linear);
+        card.lerpAnimator.StartAnimation(start, end, lerpedSpeed, BezierPreset.Linear);
     }
     board.addEventListener('mousemove', (event) => {
         if (draggedObject) {
@@ -119,7 +128,7 @@ function runMain() {
         const element = debugCard.cloneNode(true);
         board.appendChild(element);
         const testCard = makeCard(element);
-        testCard.lerpAnimator.startAnimation(testCard.currentPosition, Vec2.add(testCard.currentPosition, new Vec2(index * 30, 0)), .5, BezierPreset.EaseInOut);
+        testCard.lerpAnimator.StartAnimation(testCard.currentPosition, Vec2.add(testCard.currentPosition, new Vec2(index * 30, 0)), .5, BezierPreset.EaseInOut);
         setupCardInput(testCard);
         testCards.push(testCard);
     }
@@ -157,6 +166,16 @@ function runMain() {
         const cardCollection = cardCollectionElement;
         testCards.forEach((el) => {
             cardCollection.PushCardInstant(el);
+        });
+    }
+    {
+        const flipCollection = document.getElementById('flip-collection');
+        (_a = document.getElementById('flip-button')) === null || _a === void 0 ? void 0 : _a.addEventListener('click', ev => {
+            flipCollection.itemInUse.forEach(item => {
+                if (item.assignedCard) {
+                    item.assignedCard.Flip();
+                }
+            });
         });
     }
 }

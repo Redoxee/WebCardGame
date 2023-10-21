@@ -107,7 +107,7 @@ function runMain() {
 		currentIndex = (currentIndex + 1) % targets.length;
 		const targetPosition = new BoundingRect(targets.item(currentIndex) as HTMLElement);
 		DetachCardFromAnyCollection(debugCard);
-		debugCard.lerpAnimator.startAnimation(
+		debugCard.lerpAnimator.StartAnimation(
 			debugCard.currentPosition,
 			targetPosition.centerPosition,
 			.65,
@@ -142,7 +142,7 @@ function runMain() {
 		// converting to speed
 		const lerpedSpeed = (maxSpeed - minSpeed) * lp + minSpeed;
 		
-		card.lerpAnimator.startAnimation(
+		card.lerpAnimator.StartAnimation(
 			start,
 			end,
 			lerpedSpeed,
@@ -171,7 +171,7 @@ function runMain() {
 		const element = debugCard.cloneNode(true) as HTMLElement;
 		board.appendChild(element);
 		const testCard = makeCard(element);
-		testCard.lerpAnimator.startAnimation(testCard.currentPosition, 
+		testCard.lerpAnimator.StartAnimation(testCard.currentPosition, 
 			Vec2.add(testCard.currentPosition, new Vec2(index  * 30, 0)),
 			.5,
 			BezierPreset.EaseInOut);

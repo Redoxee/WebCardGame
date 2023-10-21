@@ -36,26 +36,60 @@ interface ICardPresentation extends HTMLElement {
 	SetZoom(zoom : number) : void;
 	SetSmoothOrientation(enabled : boolean) : void;
 	SetPosition(pos : Vec2) : void;
+	Flip() : void;
+}
+
+class CardAnimation {
+	id : string;
+	target : ICardPresentation;
+
+	startEvent : CustomEvent;
+	endEvent : CustomEvent;
+
+	constructor(target : ICardPresentation) {
+		this.target = target;
+		this.id = uniqueId();
+		
+		this.startEvent = new CustomEvent('cardAnimationStart');
+		this.endEvent = new CustomEvent('cardAnimationEnd');
+	}
+
+	StopAnimation() {
+		const index = cardAnimations.findIndex(e => e.id === this.id);
+		if(index < 0) {
+			return;
+		}
+
+		cardAnimations.splice(index, 1);
+		this.target.dispatchEvent(this.endEvent);
+	}
+
+	AnimationFrame(dt : number) : boolean {
+		throw new Error("methode not implemented");
+	}
 }
 
 let lastFrameTimeStamp = 0;
 let frameDelay = 0;
-const cardAnimations : CardLerpAnimation[] = [] ;
+const cardAnimations : CardAnimation[] = [] ;
 
 function cardAnimationCallback(timeStamp : number) {
 	const currentFrameTimeStamp = performance.now();
 	frameDelay = currentFrameTimeStamp - lastFrameTimeStamp;
 	lastFrameTimeStamp = currentFrameTimeStamp;
-	cardAnimations.forEach(element => {
-		element.animationFrame(frameDelay);
-	});
+	for(let index = cardAnimations.length - 1; index > -1; --index) {
+		const animationFinished = cardAnimations[index].AnimationFrame(frameDelay);
+		if(animationFinished) {
+			cardAnimations.splice(index, 1);
+		}
+	}
 	
 	requestAnimationFrame(cardAnimationCallback);
 }
 
 cardAnimationCallback(performance.now());
 
-class CardLerpAnimation {
+class CardLerpAnimation extends CardAnimation{
 	p0 : Vec2;
 	p1 : Vec2;
 	duration : number;
@@ -63,17 +97,12 @@ class CardLerpAnimation {
 	startTime : number;
 	rotationFactor : number;
 	elapsedTime : number;
-	target : ICardPresentation;
 	travel : Vec2;
 	bezierParams : IBezierParams;
 	direction : Vec2;
-	id : string;
-
-	startEvent : CustomEvent;
-	endEvent : CustomEvent;
 
 	constructor(target : ICardPresentation, rotationFactor : number) {
-		this.target = target;
+		super(target);
 		this.rotationFactor = rotationFactor;
 		this.duration = 0;
 		this.p0 = Vec2.Zero.clone();
@@ -85,12 +114,9 @@ class CardLerpAnimation {
 		this.bezierParams = BezierPreset.DefaultBezierParams;
 		this.direction = Vec2.Zero.clone();
 		this.id = uniqueId();
-
-		this.startEvent = new CustomEvent('cardAnimationStart');
-		this.endEvent = new CustomEvent('cardAnimationEnd');
 	};
-
-	startAnimation(p0 : Vec2, p1 : Vec2, speed : number, bezierParams : IBezierParams) {
+	
+	StartAnimation(p0 : Vec2, p1 : Vec2, speed : number, bezierParams : IBezierParams) {
 		this.p0 = p0.clone();
 		this.p1 = p1.clone();
 		const distance = (Vec2.sub(p1, p0).length());
@@ -109,7 +135,7 @@ class CardLerpAnimation {
 		this.target.dispatchEvent(this.startEvent);
 	}
 
-	animationFrame(dt : number) {
+	AnimationFrame(dt : number) : boolean {
 		this.elapsedTime += dt;
 		if (this.elapsedTime > this.duration || this.duration === 0)
 		{
@@ -117,9 +143,8 @@ class CardLerpAnimation {
 			this.target.root.style.top = `${this.p1.y}px`;
 			this.target.currentPosition = this.p1;
 			this.target.SetOrientation(Vec2.Zero);
-			cardAnimations.splice(cardAnimations.findIndex((e)=>e.id === this.id), 1);
 			this.target.dispatchEvent(this.endEvent);
-			return;
+			return true;
 		}
 	
 		const t = this.elapsedTime / this.duration;
@@ -134,16 +159,7 @@ class CardLerpAnimation {
 		// this.target.dispatchEvent(new CustomEvent('animationFrame'));
 		const transformedAcceleration = cubicInterpolationBezierFirstDerivative(t, this.bezierParams).scale(rotationFactor);
 		this.target.SetOrientation(this.direction.scale(transformedAcceleration.y));
-	}
-
-	stopAnimation() {
-		const index = cardAnimations.findIndex(e => e.id === this.id);
-		if(index < 0) {
-			return;
-		}
-
-		cardAnimations.splice(index, 1);
-		this.target.dispatchEvent(this.endEvent);
+		return false;
 	}
 }
 
@@ -163,7 +179,7 @@ function addCardPresentationCapability(cardElements : ICardElements, options : I
 	const shadeDirection = new Vec3(-options.lightDirection.x, -options.lightDirection.y, options.lightDirection.z);
 	
 	card.SetPosition = (position : Vec2) => {
-		card.lerpAnimator.stopAnimation();
+		card.lerpAnimator.StopAnimation();
 		card.root.style.left = `${position.x}px`;
 		card.root.style.top = `${position.y}px`;
 		card.currentPosition = position.clone();
