@@ -30,6 +30,7 @@ interface ICardPresentation extends HTMLElement {
 	root : HTMLElement;
 	lerpAnimator : CardLerpAnimation;
 	currentPosition : Vec2;
+	isFlipped : boolean;
 
 	SetOrientation(position : Vec2) : void;
 	SetZoom(zoom : number) : void;
@@ -150,7 +151,8 @@ function addCardPresentationCapability(cardElements : ICardElements, options : I
 	const card = cardElements.root as ICardPresentation;
 	card.root = cardElements.root;
 	const zoomElement = cardElements.zoomable;
-	
+	card.isFlipped = false;
+
 	const shadowOffset = {
 		x : options.shadowDistance * Vec3.dot(options.lightDirection, Vec3.Left), 
 		y : options.shadowDistance * Vec3.dot(options.lightDirection, Vec3.Down)
@@ -206,6 +208,10 @@ function addCardPresentationCapability(cardElements : ICardElements, options : I
 			}
 		}
 	}
+
+	card.Flip = ()=> {
+		card.isFlipped = !card.isFlipped;
+	};
 
 	card.lerpAnimator = new CardLerpAnimation(card, 100);
 

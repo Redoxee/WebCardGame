@@ -89,6 +89,14 @@ function runMain() {
 
 	setupCardInput(debugCard);
 
+	function DetachCardFromAnyCollection(card: ICardPresentation) {
+		allCardCollections.forEach(collection=>{
+			if(collection.ContainsCard(card)) {
+				collection.DetachCard(card);
+			}
+		});
+	}
+
 	const testButton = document.getElementById('slide-button') as HTMLButtonElement;
 	
 	const targets = document.getElementById('slide-test')!.getElementsByClassName('target');
@@ -98,6 +106,7 @@ function runMain() {
 	testButton.addEventListener('click', (_ev)=>{
 		currentIndex = (currentIndex + 1) % targets.length;
 		const targetPosition = new BoundingRect(targets.item(currentIndex) as HTMLElement);
+		DetachCardFromAnyCollection(debugCard);
 		debugCard.lerpAnimator.startAnimation(
 			debugCard.currentPosition,
 			targetPosition.centerPosition,
@@ -205,13 +214,23 @@ function runMain() {
 			currentHoveredCollection.ReserveSlot(SelectClosestItemSelector(ev.clientX, ev.clientY));
 		}
 	});
-
 	
 	{
 		const cardCollectionElement = document.getElementById('mock-collection')!;
 		const cardCollection = cardCollectionElement as ICardCollection;
 		testCards.forEach((el)=> {
 			cardCollection.PushCardInstant(el);
+		});
+	}
+
+	{
+		const flipCollection = document.getElementById('flip-collection') as ICardCollection;
+		document.getElementById('flip-button')?.addEventListener('click', ev=>{
+			flipCollection.itemInUse.forEach(item=>{
+				if (item.assignedCard) {
+					item.assignedCard.Flip();
+				}
+			});
 		});
 	}
 }
