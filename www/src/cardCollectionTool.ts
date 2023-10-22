@@ -113,7 +113,7 @@ function setupCardCollection(collectionELement : HTMLElement, params : ICardColl
 		cardCollection.reservingItem.assignedCard = card;
 		
 		cardCollection.reservingItem.bounds.Recompute();
-		card.lerpAnimator.startAnimation(
+		card.lerpAnimator.StartAnimation(
 			cardCollection.reservingItem.assignedCard.currentPosition, 
 			cardCollection.reservingItem.bounds.centerPosition,
 			1,
@@ -147,7 +147,7 @@ function setupCardCollection(collectionELement : HTMLElement, params : ICardColl
 				item.bounds.Recompute();
 				// item.assignedCard.SetPosition(item.bounds.centerPosition);
 				const b = new BoundingRect(item.assignedCard);
-				item.assignedCard.lerpAnimator.startAnimation(
+				item.assignedCard.lerpAnimator.StartAnimation(
 					item.assignedCard.currentPosition, 
 					item.bounds.centerPosition,
 					1,
@@ -178,6 +178,7 @@ function setupCardCollection(collectionELement : HTMLElement, params : ICardColl
 		cardCollection.itemInUse.splice(index,0 , newItem);
 		cardCollection.insertBefore(newItem, cardCollection.childNodes[index + 1]);
 		newItem.assignedCard = card;
+		cardCollection.bounds.Recompute();
 
 		cardCollection.itemInUse.forEach((item)=>{
 			if(!item.assignedCard){

@@ -1,5 +1,5 @@
 import {Vec2, Vec3} from './vec';
-import {ICardElements, ICardPresentationOptions, addCardPresentationCapability, ICardPresentation} from './cardTool';
+import {ICardPresentationOptions, addCardPresentationCapability, ICardPresentation} from './cardTool';
 import {setupSandboxCurves} from './curveSandbox';
 import {uniqueId ,addCustomStyle, BoundingRect} from './domUtils';
 import { cubicInterpolationBezier, cubicInterpolationBezierFirstDerivative, BezierPreset, IBezierParams } from './math';
@@ -17,19 +17,7 @@ function runMain() {
 	function makeCard(rootNode : HTMLElement) : ICardPresentation {
 		const cardClassName = `PresentationCard${uniqueId()}`;
 		rootNode.classList.add(cardClassName);
-		const card = document.querySelector(`.${cardClassName} #card`)! as HTMLElement;
-		const cardItem = document.querySelector(`.${cardClassName} #card-item`)! as HTMLElement;
-		const shine = document.querySelector(`.${cardClassName} #shine`)! as HTMLElement;
-		const shade = document.querySelector(`.${cardClassName} #shade`)! as HTMLElement;
-		
-		const cardElements : ICardElements = {
-			root : rootNode,
-			zoomable : card,
-			cardItem : cardItem,
-			shine : shine,
-			shade : shade,
-		};
-		
+
 		const cardOptions : ICardPresentationOptions = {
 			lightDirection : (new Vec3(.15, -1, .25)).normalize(),
 			simHeight : 190, 
@@ -37,8 +25,8 @@ function runMain() {
 			shadowDistance : 5
 		};
 		
-		const presentationCard = addCardPresentationCapability(cardElements, cardOptions);
-		presentationCard.SetOrientation(Vec2.Zero);
+		const presentationCard = addCardPresentationCapability(rootNode, cardOptions);
+		presentationCard.LookToward(Vec2.Zero);
 		return presentationCard;
 	}
 
@@ -48,10 +36,9 @@ function runMain() {
 
 	function startInput(card : ICardPresentation) {
 		draggedObject = card;
-		if (cardCollection.ContainsCard(card)) {
-			cardCollection.DetachCard(card);
-			cardCollection.ReserveSlot(SelectClosestItemSelector(card.currentPosition.x, card.currentPosition.y));
-			hoveredCardCollection = cardCollection;
+		if (hoveredCardCollection && hoveredCardCollection.ContainsCard(card)) {
+			hoveredCardCollection.DetachCard(card);
+			hoveredCardCollection.ReserveSlot(SelectClosestItemSelector(card.currentPosition.x, card.currentPosition.y));
 		}
 
 		card.style.zIndex = draggedZindex.toString();
@@ -90,20 +77,25 @@ function runMain() {
 
 	setupCardInput(debugCard);
 
-	const testButton = document.getElementById('test-button') as HTMLButtonElement;
-	const targets = [
-		document.getElementById('target-1')!,
-		document.getElementById('target-2')!,
-		document.getElementById('target-3')!,
-		document.getElementById('target-4')!,
-	];
+	function DetachCardFromAnyCollection(card: ICardPresentation) {
+		allCardCollections.forEach(collection=>{
+			if(collection.ContainsCard(card)) {
+				collection.DetachCard(card);
+			}
+		});
+	}
+
+	const testButton = document.getElementById('slide-button') as HTMLButtonElement;
+	
+	const targets = document.getElementById('slide-test')!.getElementsByClassName('target');
 
 	let currentIndex = 0;
 
 	testButton.addEventListener('click', (_ev)=>{
 		currentIndex = (currentIndex + 1) % targets.length;
-		const targetPosition = new BoundingRect(targets[currentIndex]);
-		debugCard.lerpAnimator.startAnimation(
+		const targetPosition = new BoundingRect(targets.item(currentIndex) as HTMLElement);
+		DetachCardFromAnyCollection(debugCard);
+		debugCard.lerpAnimator.StartAnimation(
 			debugCard.currentPosition,
 			targetPosition.centerPosition,
 			.65,
@@ -138,7 +130,7 @@ function runMain() {
 		// converting to speed
 		const lerpedSpeed = (maxSpeed - minSpeed) * lp + minSpeed;
 		
-		card.lerpAnimator.startAnimation(
+		card.lerpAnimator.StartAnimation(
 			start,
 			end,
 			lerpedSpeed,
@@ -167,7 +159,7 @@ function runMain() {
 		const element = debugCard.cloneNode(true) as HTMLElement;
 		board.appendChild(element);
 		const testCard = makeCard(element);
-		testCard.lerpAnimator.startAnimation(testCard.currentPosition, 
+		testCard.lerpAnimator.StartAnimation(testCard.currentPosition, 
 			Vec2.add(testCard.currentPosition, new Vec2(index  * 30, 0)),
 			.5,
 			BezierPreset.EaseInOut);
@@ -175,36 +167,60 @@ function runMain() {
 			testCards.push(testCard);
 	}
 	
-	const cardCollectionElement = document.getElementById('mock-collection')!;
 	const cardCollectionParams : ICardCollectionParameters = {
 		itemStyle : "width : 5em; height: 5em",
 	};
 	
-	const cardCollection = setupCardCollection(cardCollectionElement, cardCollectionParams);
+	const allCardCollections : ICardCollection[] = [];
+	const allCardCollectionElements = document.getElementsByClassName('card-collection');
+	for(let index = 0; index < allCardCollectionElements.length; ++index) {
+		const element = allCardCollectionElements.item(index) as HTMLElement;
+		allCardCollections.push(setupCardCollection(element, cardCollectionParams));
+	}
 	
 	board.addEventListener('mousemove', (ev)=> {
 		const mousePosition = new Vec2(ev.clientX, ev.clientY);
-		if (cardCollection.bounds.Contains(mousePosition)) {
-			if (!cardCollection.reservingItem) {
-				hoveredCardCollection = cardCollection;
-			}
-
-			if (draggedObject) {
-				cardCollection.ReserveSlot(SelectClosestItemSelector(ev.clientX, ev.clientY));
+		
+		let currentHoveredCollection : ICardCollection|null = null;
+		for(let index = 0; index < allCardCollections.length; ++index){
+			const collection = allCardCollections[index];
+			if(collection.bounds.Contains(mousePosition)) {
+				currentHoveredCollection = collection;
+				break;
 			}
 		}
-		else {
+
+		if (currentHoveredCollection !== hoveredCardCollection) {
 			if (hoveredCardCollection && hoveredCardCollection.reservingItem) {
 				hoveredCardCollection.CancelReservation();
 			}
+			
+			hoveredCardCollection = currentHoveredCollection;
+		}
 
-			hoveredCardCollection = null;
+		if (currentHoveredCollection && draggedObject) {
+			currentHoveredCollection.ReserveSlot(SelectClosestItemSelector(ev.clientX, ev.clientY));
 		}
 	});
+	
+	{
+		const cardCollectionElement = document.getElementById('mock-collection')!;
+		const cardCollection = cardCollectionElement as ICardCollection;
+		testCards.forEach((el)=> {
+			cardCollection.PushCardInstant(el);
+		});
+	}
 
-	testCards.forEach((el)=> {
-		cardCollection.PushCardInstant(el);
-	});
+	{
+		const flipCollection = document.getElementById('flip-collection') as ICardCollection;
+		document.getElementById('flip-button')?.addEventListener('click', ev=>{
+			flipCollection.itemInUse.forEach(item=>{
+				if (item.assignedCard) {
+					item.assignedCard.AnimatedFlip(!item.assignedCard.isFlipped);
+				}
+			});
+		});
+	}
 }
 
 window.addEventListener('load', ()=>{

@@ -2,6 +2,7 @@ $ErrorActionPreference = "Stop"
 
 $scriptPath = split-path -parent $MyInvocation.MyCommand.Definition
 echo $scriptPath
+$parcelCache = ".\.parcel-cache"
 $workingFolder = ".\dist"
 $destinationFolder = ".\build"
 
@@ -13,6 +14,9 @@ Get-ChildItem $workingFolder | Remove-Item -Force -Verbose
 
 echo "cleaning $destinationFolder"
 Get-ChildItem $destinationFolder | Remove-Item -Force -Verbose
+
+echo "cleaning $parcelCache"
+Get-ChildItem $parcelCache | Remove-Item -Force -Verbose
 
 # Compile typescript
 echo "Compiling code"
