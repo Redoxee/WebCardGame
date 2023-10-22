@@ -164,23 +164,24 @@ class CardLerpAnimation extends CardAnimation{
 
 class CardFlipAnimation extends CardAnimation {
 	duration : number;
+	startFaceDown : boolean;
 	endTime : number;
-	startTime : number;
 	elapsedTime : number;
 
 	constructor(target : ICardPresentation) {
 		super(target);
 		this.duration = 0;
 		this.endTime = 0;
-		this.startTime = 0;
+		this.startFaceDown = false;
 		this.elapsedTime = 0;
 	}
 
-	StartAnimation(duration : number) {
+	StartAnimation(startFaceDown : boolean, duration : number) {
 		this.duration = duration;
-		this.startTime = performance.now() - frameDelay;
-		this.endTime = this.startTime + duration;
+		const startTime = performance.now() - frameDelay;
+		this.endTime = startTime + duration;
 		this.elapsedTime = 0;
+		this.startFaceDown = startFaceDown;
 
 		if (!cardAnimations.find((e)=>e.id === this.id)) {
 			cardAnimations.push(this);
@@ -195,12 +196,10 @@ class CardFlipAnimation extends CardAnimation {
 		if (this.elapsedTime > this.duration || this.duration === 0)
 		{
 			this.target.dispatchEvent(this.endEvent);
-			console.log('ended');
 			return true;
 		}
 
-		const t = this.elapsedTime / this.duration;
-		console.log(t);
+		const t = this.elapsedTime / this.duration + (this.startFaceDown ? 1 : 0);
 		this.target.SetRotation(t * Math.PI, 0);
 
 		return false;
@@ -274,8 +273,8 @@ function addCardPresentationCapability(cardElements : ICardElements, options : I
 	}
 
 	card.Flip = ()=> {
+		card.flipAnimator.StartAnimation(card.isFlipped, 1000);
 		card.isFlipped = !card.isFlipped;
-		card.flipAnimator.StartAnimation(1000);
 	};
 
 	card.lerpAnimator = new CardLerpAnimation(card, 100);
