@@ -1,6 +1,6 @@
-import { Vec2, Vec3 } from './vec';
-import { addCustomStyle, BoundingRect, uniqueId } from './domUtils';
-import { BezierPreset, cubicInterpolationBezier, cubicInterpolationBezierFirstDerivative } from './math';
+import { Vec3 } from './vec';
+import { addCustomStyle, BoundingRect } from './domUtils';
+import { CardLerpAnimation, CardFlipAnimation } from './cardAnimation';
 function rotatePitchRoll(vec, pitch, roll) {
     const cp = Math.cos(pitch);
     const sp = Math.sin(pitch);
@@ -8,136 +8,100 @@ function rotatePitchRoll(vec, pitch, roll) {
     const sr = Math.sin(roll);
     return new Vec3(vec.x * cp + vec.z * sp, vec.x * sp * sr + vec.y * cr - vec.z * sr * cp, -vec.x * sp * cr + vec.y * sr + vec.z * cp * cr);
 }
-let lastFrameTimeStamp = 0;
-let frameDelay = 0;
-const cardAnimations = [];
-function cardAnimationCallback(timeStamp) {
-    const currentFrameTimeStamp = performance.now();
-    frameDelay = currentFrameTimeStamp - lastFrameTimeStamp;
-    lastFrameTimeStamp = currentFrameTimeStamp;
-    cardAnimations.forEach(element => {
-        element.animationFrame(frameDelay);
-    });
-    requestAnimationFrame(cardAnimationCallback);
-}
-cardAnimationCallback(performance.now());
-class CardLerpAnimation {
-    constructor(target, rotationFactor) {
-        this.target = target;
-        this.rotationFactor = rotationFactor;
-        this.duration = 0;
-        this.p0 = Vec2.Zero.clone();
-        this.p1 = Vec2.Zero.clone();
-        this.travel = Vec2.Zero.clone();
-        this.endTime = 0;
-        this.elapsedTime = 0;
-        this.startTime = -1;
-        this.bezierParams = BezierPreset.DefaultBezierParams;
-        this.direction = Vec2.Zero.clone();
-        this.id = uniqueId();
-        this.startEvent = new CustomEvent('cardAnimationStart');
-        this.endEvent = new CustomEvent('cardAnimationEnd');
-    }
-    ;
-    startAnimation(p0, p1, speed, bezierParams) {
-        this.p0 = p0.clone();
-        this.p1 = p1.clone();
-        const distance = (Vec2.sub(p1, p0).length());
-        this.duration = distance / speed;
-        this.startTime = performance.now() - frameDelay;
-        this.endTime = this.startTime + this.duration;
-        this.elapsedTime = 0;
-        this.travel = Vec2.sub(p1, p0);
-        this.direction = this.travel.norm();
-        this.bezierParams = bezierParams;
-        if (!cardAnimations.find((e) => e.id === this.id)) {
-            cardAnimations.push(this);
+function addCardPresentationCapability(root, options) {
+    const card = root;
+    card.root = root;
+    card.frontItems = Array.from(card.getElementsByClassName('front')).map(e => e);
+    card.backItems = Array.from(card.getElementsByClassName('back')).map(e => e);
+    card.shadeItems = Array.from(card.getElementsByClassName('shade')).map(e => e);
+    card.shineItems = Array.from(card.getElementsByClassName('shine')).map(e => e);
+    {
+        const cardItemCollection = Array.from(card.getElementsByClassName('card-item')).map(e => e);
+        if (cardItemCollection.length !== 1) {
+            throw 'wrong number of element with class "card-item"';
         }
-        this.target.dispatchEvent(this.startEvent);
+        card.cardItem = cardItemCollection.pop();
     }
-    animationFrame(dt) {
-        this.elapsedTime += dt;
-        if (this.elapsedTime > this.duration || this.duration === 0) {
-            this.target.root.style.left = `${this.p1.x}px`;
-            this.target.root.style.top = `${this.p1.y}px`;
-            this.target.currentPosition = this.p1;
-            this.target.SetOrientation(Vec2.Zero);
-            cardAnimations.splice(cardAnimations.findIndex((e) => e.id === this.id), 1);
-            this.target.dispatchEvent(this.endEvent);
-            return;
+    {
+        const zoomableCollection = Array.from(card.getElementsByClassName('zoom-item')).map(e => e);
+        if (zoomableCollection.length !== 1) {
+            throw 'wrong number of element with class "zoom-item"';
         }
-        const t = this.elapsedTime / this.duration;
-        const rotationFactor = this.rotationFactor;
-        const transformedTime = cubicInterpolationBezier(t, this.bezierParams);
-        const currentPos = Vec2.add(this.p0, this.travel.scale(transformedTime.y));
-        this.target.root.style.left = `${currentPos.x}px`;
-        this.target.root.style.top = `${currentPos.y}px`;
-        this.target.currentPosition = currentPos;
-        // this.target.dispatchEvent(new CustomEvent('animationFrame'));
-        const transformedAcceleration = cubicInterpolationBezierFirstDerivative(t, this.bezierParams).scale(rotationFactor);
-        this.target.SetOrientation(this.direction.scale(transformedAcceleration.y));
+        card.zoomElement = zoomableCollection.pop();
     }
-    stopAnimation() {
-        const index = cardAnimations.findIndex(e => e.id === this.id);
-        if (index < 0) {
-            return;
-        }
-        cardAnimations.splice(index, 1);
-        this.target.dispatchEvent(this.endEvent);
-    }
-}
-function addCardPresentationCapability(cardElements, options) {
-    const card = cardElements.root;
-    card.root = cardElements.root;
-    const zoomElement = cardElements.zoomable;
+    card.isFlipped = false;
     const shadowOffset = {
         x: options.shadowDistance * Vec3.dot(options.lightDirection, Vec3.Left),
         y: options.shadowDistance * Vec3.dot(options.lightDirection, Vec3.Down)
     };
-    cardElements.cardItem.style.filter = `drop-shadow(${shadowOffset.x}px ${shadowOffset.y}px 5px black)`;
+    card.cardItem.style.filter = `drop-shadow(${shadowOffset.x}px ${shadowOffset.y}px 5px black)`;
     const shadeDirection = new Vec3(-options.lightDirection.x, -options.lightDirection.y, options.lightDirection.z);
     card.SetPosition = (position) => {
-        card.lerpAnimator.stopAnimation();
+        card.lerpAnimator.StopAnimation();
         card.root.style.left = `${position.x}px`;
         card.root.style.top = `${position.y}px`;
         card.currentPosition = position.clone();
     };
-    card.SetOrientation = (position) => {
+    card.LookToward = (position) => {
         const atanX = Math.atan2(Math.abs(position.x), options.simHeight);
         const angleX = position.x === 0 ? 0 : position.x > 0 ? atanX : -atanX;
         const atanY = Math.atan2(Math.abs(position.y), options.simHeight);
         const angleY = position.y === 0 ? 0 : position.y > 0 ? -atanY : atanY;
+        card.SetRotation(angleX, angleY);
+    };
+    card.SetRotation = (ax, ay) => {
         // Rotating a vector up toward the viewer to the inclination of the card.
-        const normal = rotatePitchRoll(Vec3.Backward, angleX, angleY);
+        const normal = rotatePitchRoll(Vec3.Backward, ax, ay);
         const li = Math.pow(Vec3.dot(normal, options.lightDirection), options.lightPower);
-        cardElements.cardItem.style.transform = `rotateY(${angleX}rad) rotateX(${angleY}rad)`;
-        cardElements.shine.style.opacity = `${li * 100}%`;
+        card.cardItem.style.transform = `rotateY(${ax}rad) rotateX(${ay}rad)`;
+        for (let index = 0; index < card.shineItems.length; ++index) {
+            card.shineItems[index].style.opacity = `${li * 100}%`;
+        }
         const unLi = Math.pow(Vec3.dot(normal, shadeDirection), options.lightPower);
-        cardElements.shade.style.opacity = `${unLi * 100}%`;
+        for (let index = 0; index < card.shadeItems.length; ++index) {
+            card.shadeItems[index].style.opacity = `${unLi * 100}%`;
+        }
     };
     const smoothTransition = addCustomStyle({
         className: "zoomin",
         content: "transition: transform 0.25s ease-out;"
     });
-    zoomElement.classList.add(smoothTransition);
+    card.zoomElement.classList.add(smoothTransition);
     card.SetZoom = (zoom) => {
-        zoomElement.style.transform = `scale(${zoom})`;
+        card.zoomElement.style.transform = `scale(${zoom})`;
     };
     card.SetSmoothOrientation = (enabled) => {
         if (enabled) {
-            if (!cardElements.cardItem.classList.contains(smoothTransition)) {
-                cardElements.cardItem.classList.add(smoothTransition);
+            if (!card.cardItem.classList.contains(smoothTransition)) {
+                card.cardItem.classList.add(smoothTransition);
             }
         }
         else {
-            if (cardElements.cardItem.classList.contains(smoothTransition)) {
-                cardElements.cardItem.classList.remove(smoothTransition);
+            if (card.cardItem.classList.contains(smoothTransition)) {
+                card.cardItem.classList.remove(smoothTransition);
             }
         }
     };
+    card.SetFlip = (isFlipped) => {
+        for (let index = 0; index < card.frontItems.length; ++index) {
+            card.frontItems[index].style.display = isFlipped ? 'none' : '';
+        }
+        for (let index = 0; index < card.backItems.length; ++index) {
+            card.backItems[index].style.display = isFlipped ? '' : 'none';
+        }
+        card.isFlipped = isFlipped;
+    };
+    card.AnimatedFlip = (isFlipped) => {
+        if (card.isFlipped === isFlipped) {
+            return;
+        }
+        card.flipAnimator.StartAnimation(card.isFlipped, 1000);
+    };
     card.lerpAnimator = new CardLerpAnimation(card, 100);
+    card.flipAnimator = new CardFlipAnimation(card);
     const bounds = new BoundingRect(card);
     card.currentPosition = bounds.centerPosition.clone();
+    card.SetFlip(false);
     return card;
 }
 export { addCardPresentationCapability, CardLerpAnimation };
