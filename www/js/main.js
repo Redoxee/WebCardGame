@@ -12,24 +12,13 @@ function runMain() {
     function makeCard(rootNode) {
         const cardClassName = `PresentationCard${uniqueId()}`;
         rootNode.classList.add(cardClassName);
-        const card = document.querySelector(`.${cardClassName} #card`);
-        const cardItem = document.querySelector(`.${cardClassName} #card-item`);
-        const shine = document.querySelector(`.${cardClassName} #shine`);
-        const shade = document.querySelector(`.${cardClassName} #shade`);
-        const cardElements = {
-            root: rootNode,
-            zoomable: card,
-            cardItem: cardItem,
-            shine: shine,
-            shade: shade,
-        };
         const cardOptions = {
             lightDirection: (new Vec3(.15, -1, .25)).normalize(),
             simHeight: 190,
             lightPower: 1.5,
             shadowDistance: 5
         };
-        const presentationCard = addCardPresentationCapability(cardElements, cardOptions);
+        const presentationCard = addCardPresentationCapability(rootNode, cardOptions);
         presentationCard.LookToward(Vec2.Zero);
         return presentationCard;
     }
@@ -173,7 +162,7 @@ function runMain() {
         (_a = document.getElementById('flip-button')) === null || _a === void 0 ? void 0 : _a.addEventListener('click', ev => {
             flipCollection.itemInUse.forEach(item => {
                 if (item.assignedCard) {
-                    item.assignedCard.Flip();
+                    item.assignedCard.AnimatedFlip(!item.assignedCard.isFlipped);
                 }
             });
         });

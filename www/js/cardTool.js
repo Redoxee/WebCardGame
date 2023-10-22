@@ -1,6 +1,6 @@
-import { Vec2, Vec3 } from './vec';
-import { addCustomStyle, BoundingRect, uniqueId } from './domUtils';
-import { BezierPreset, cubicInterpolationBezier, cubicInterpolationBezierFirstDerivative } from './math';
+import { Vec3 } from './vec';
+import { addCustomStyle, BoundingRect } from './domUtils';
+import { CardLerpAnimation, CardFlipAnimation } from './cardAnimation';
 function rotatePitchRoll(vec, pitch, roll) {
     const cp = Math.cos(pitch);
     const sp = Math.sin(pitch);
@@ -8,134 +8,33 @@ function rotatePitchRoll(vec, pitch, roll) {
     const sr = Math.sin(roll);
     return new Vec3(vec.x * cp + vec.z * sp, vec.x * sp * sr + vec.y * cr - vec.z * sr * cp, -vec.x * sp * cr + vec.y * sr + vec.z * cp * cr);
 }
-class CardAnimation {
-    constructor(target) {
-        this.target = target;
-        this.id = uniqueId();
-        this.startEvent = new CustomEvent('cardAnimationStart');
-        this.endEvent = new CustomEvent('cardAnimationEnd');
-    }
-    StopAnimation() {
-        const index = cardAnimations.findIndex(e => e.id === this.id);
-        if (index < 0) {
-            return;
+function addCardPresentationCapability(root, options) {
+    const card = root;
+    card.root = root;
+    card.frontItems = Array.from(card.getElementsByClassName('front')).map(e => e);
+    card.backItems = Array.from(card.getElementsByClassName('back')).map(e => e);
+    card.shadeItems = Array.from(card.getElementsByClassName('shade')).map(e => e);
+    card.shineItems = Array.from(card.getElementsByClassName('shine')).map(e => e);
+    {
+        const cardItemCollection = Array.from(card.getElementsByClassName('card-item')).map(e => e);
+        if (cardItemCollection.length !== 1) {
+            throw 'wrong number of element with class "card-item"';
         }
-        cardAnimations.splice(index, 1);
-        this.target.dispatchEvent(this.endEvent);
+        card.cardItem = cardItemCollection.pop();
     }
-    AnimationFrame(dt) {
-        throw new Error("methode not implemented");
-    }
-}
-let lastFrameTimeStamp = 0;
-let frameDelay = 0;
-const cardAnimations = [];
-function cardAnimationCallback(timeStamp) {
-    const currentFrameTimeStamp = performance.now();
-    frameDelay = currentFrameTimeStamp - lastFrameTimeStamp;
-    lastFrameTimeStamp = currentFrameTimeStamp;
-    for (let index = cardAnimations.length - 1; index > -1; --index) {
-        const animationFinished = cardAnimations[index].AnimationFrame(frameDelay);
-        if (animationFinished) {
-            cardAnimations.splice(index, 1);
+    {
+        const zoomableCollection = Array.from(card.getElementsByClassName('zoom-item')).map(e => e);
+        if (zoomableCollection.length !== 1) {
+            throw 'wrong number of element with class "zoom-item"';
         }
+        card.zoomElement = zoomableCollection.pop();
     }
-    requestAnimationFrame(cardAnimationCallback);
-}
-cardAnimationCallback(performance.now());
-class CardLerpAnimation extends CardAnimation {
-    constructor(target, rotationFactor) {
-        super(target);
-        this.rotationFactor = rotationFactor;
-        this.duration = 0;
-        this.p0 = Vec2.Zero.clone();
-        this.p1 = Vec2.Zero.clone();
-        this.travel = Vec2.Zero.clone();
-        this.elapsedTime = 0;
-        this.startTime = -1;
-        this.bezierParams = BezierPreset.DefaultBezierParams;
-        this.direction = Vec2.Zero.clone();
-        this.id = uniqueId();
-    }
-    ;
-    StartAnimation(p0, p1, speed, bezierParams) {
-        this.p0 = p0.clone();
-        this.p1 = p1.clone();
-        const distance = (Vec2.sub(p1, p0).length());
-        this.duration = distance / speed;
-        this.startTime = performance.now() - frameDelay;
-        this.elapsedTime = 0;
-        this.travel = Vec2.sub(p1, p0);
-        this.direction = this.travel.norm();
-        this.bezierParams = bezierParams;
-        if (!cardAnimations.find((e) => e.id === this.id)) {
-            cardAnimations.push(this);
-        }
-        this.target.dispatchEvent(this.startEvent);
-    }
-    AnimationFrame(dt) {
-        this.elapsedTime += dt;
-        if (this.elapsedTime > this.duration || this.duration === 0) {
-            this.target.root.style.left = `${this.p1.x}px`;
-            this.target.root.style.top = `${this.p1.y}px`;
-            this.target.currentPosition = this.p1;
-            this.target.LookToward(Vec2.Zero);
-            this.target.dispatchEvent(this.endEvent);
-            return true;
-        }
-        const t = this.elapsedTime / this.duration;
-        const rotationFactor = this.rotationFactor;
-        const transformedTime = cubicInterpolationBezier(t, this.bezierParams);
-        const currentPos = Vec2.add(this.p0, this.travel.scale(transformedTime.y));
-        this.target.root.style.left = `${currentPos.x}px`;
-        this.target.root.style.top = `${currentPos.y}px`;
-        this.target.currentPosition = currentPos;
-        // this.target.dispatchEvent(new CustomEvent('animationFrame'));
-        const transformedAcceleration = cubicInterpolationBezierFirstDerivative(t, this.bezierParams).scale(rotationFactor);
-        this.target.LookToward(this.direction.scale(transformedAcceleration.y));
-        return false;
-    }
-}
-class CardFlipAnimation extends CardAnimation {
-    constructor(target) {
-        super(target);
-        this.duration = 0;
-        this.endTime = 0;
-        this.startFaceDown = false;
-        this.elapsedTime = 0;
-    }
-    StartAnimation(startFaceDown, duration) {
-        this.duration = duration;
-        const startTime = performance.now() - frameDelay;
-        this.endTime = startTime + duration;
-        this.elapsedTime = 0;
-        this.startFaceDown = startFaceDown;
-        if (!cardAnimations.find((e) => e.id === this.id)) {
-            cardAnimations.push(this);
-        }
-        this.target.dispatchEvent(this.startEvent);
-    }
-    AnimationFrame(dt) {
-        this.elapsedTime += dt;
-        if (this.elapsedTime > this.duration || this.duration === 0) {
-            this.target.dispatchEvent(this.endEvent);
-            return true;
-        }
-        const t = this.elapsedTime / this.duration + (this.startFaceDown ? 1 : 0);
-        this.target.SetRotation(t * Math.PI, 0);
-        return false;
-    }
-}
-function addCardPresentationCapability(cardElements, options) {
-    const card = cardElements.root;
-    card.root = cardElements.root;
-    const zoomElement = cardElements.zoomable;
     card.isFlipped = false;
     const shadowOffset = {
         x: options.shadowDistance * Vec3.dot(options.lightDirection, Vec3.Left),
         y: options.shadowDistance * Vec3.dot(options.lightDirection, Vec3.Down)
     };
-    cardElements.cardItem.style.filter = `drop-shadow(${shadowOffset.x}px ${shadowOffset.y}px 5px black)`;
+    card.cardItem.style.filter = `drop-shadow(${shadowOffset.x}px ${shadowOffset.y}px 5px black)`;
     const shadeDirection = new Vec3(-options.lightDirection.x, -options.lightDirection.y, options.lightDirection.z);
     card.SetPosition = (position) => {
         card.lerpAnimator.StopAnimation();
@@ -154,39 +53,55 @@ function addCardPresentationCapability(cardElements, options) {
         // Rotating a vector up toward the viewer to the inclination of the card.
         const normal = rotatePitchRoll(Vec3.Backward, ax, ay);
         const li = Math.pow(Vec3.dot(normal, options.lightDirection), options.lightPower);
-        cardElements.cardItem.style.transform = `rotateY(${ax}rad) rotateX(${ay}rad)`;
-        cardElements.shine.style.opacity = `${li * 100}%`;
+        card.cardItem.style.transform = `rotateY(${ax}rad) rotateX(${ay}rad)`;
+        for (let index = 0; index < card.shineItems.length; ++index) {
+            card.shineItems[index].style.opacity = `${li * 100}%`;
+        }
         const unLi = Math.pow(Vec3.dot(normal, shadeDirection), options.lightPower);
-        cardElements.shade.style.opacity = `${unLi * 100}%`;
+        for (let index = 0; index < card.shadeItems.length; ++index) {
+            card.shadeItems[index].style.opacity = `${unLi * 100}%`;
+        }
     };
     const smoothTransition = addCustomStyle({
         className: "zoomin",
         content: "transition: transform 0.25s ease-out;"
     });
-    zoomElement.classList.add(smoothTransition);
+    card.zoomElement.classList.add(smoothTransition);
     card.SetZoom = (zoom) => {
-        zoomElement.style.transform = `scale(${zoom})`;
+        card.zoomElement.style.transform = `scale(${zoom})`;
     };
     card.SetSmoothOrientation = (enabled) => {
         if (enabled) {
-            if (!cardElements.cardItem.classList.contains(smoothTransition)) {
-                cardElements.cardItem.classList.add(smoothTransition);
+            if (!card.cardItem.classList.contains(smoothTransition)) {
+                card.cardItem.classList.add(smoothTransition);
             }
         }
         else {
-            if (cardElements.cardItem.classList.contains(smoothTransition)) {
-                cardElements.cardItem.classList.remove(smoothTransition);
+            if (card.cardItem.classList.contains(smoothTransition)) {
+                card.cardItem.classList.remove(smoothTransition);
             }
         }
     };
-    card.Flip = () => {
+    card.SetFlip = (isFlipped) => {
+        for (let index = 0; index < card.frontItems.length; ++index) {
+            card.frontItems[index].style.display = isFlipped ? 'none' : '';
+        }
+        for (let index = 0; index < card.backItems.length; ++index) {
+            card.backItems[index].style.display = isFlipped ? '' : 'none';
+        }
+        card.isFlipped = isFlipped;
+    };
+    card.AnimatedFlip = (isFlipped) => {
+        if (card.isFlipped === isFlipped) {
+            return;
+        }
         card.flipAnimator.StartAnimation(card.isFlipped, 1000);
-        card.isFlipped = !card.isFlipped;
     };
     card.lerpAnimator = new CardLerpAnimation(card, 100);
     card.flipAnimator = new CardFlipAnimation(card);
     const bounds = new BoundingRect(card);
     card.currentPosition = bounds.centerPosition.clone();
+    card.SetFlip(false);
     return card;
 }
 export { addCardPresentationCapability, CardLerpAnimation };

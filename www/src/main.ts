@@ -1,5 +1,5 @@
 import {Vec2, Vec3} from './vec';
-import {ICardElements, ICardPresentationOptions, addCardPresentationCapability, ICardPresentation} from './cardTool';
+import {ICardPresentationOptions, addCardPresentationCapability, ICardPresentation} from './cardTool';
 import {setupSandboxCurves} from './curveSandbox';
 import {uniqueId ,addCustomStyle, BoundingRect} from './domUtils';
 import { cubicInterpolationBezier, cubicInterpolationBezierFirstDerivative, BezierPreset, IBezierParams } from './math';
@@ -17,19 +17,7 @@ function runMain() {
 	function makeCard(rootNode : HTMLElement) : ICardPresentation {
 		const cardClassName = `PresentationCard${uniqueId()}`;
 		rootNode.classList.add(cardClassName);
-		const card = document.querySelector(`.${cardClassName} #card`)! as HTMLElement;
-		const cardItem = document.querySelector(`.${cardClassName} #card-item`)! as HTMLElement;
-		const shine = document.querySelector(`.${cardClassName} #shine`)! as HTMLElement;
-		const shade = document.querySelector(`.${cardClassName} #shade`)! as HTMLElement;
-		
-		const cardElements : ICardElements = {
-			root : rootNode,
-			zoomable : card,
-			cardItem : cardItem,
-			shine : shine,
-			shade : shade,
-		};
-		
+
 		const cardOptions : ICardPresentationOptions = {
 			lightDirection : (new Vec3(.15, -1, .25)).normalize(),
 			simHeight : 190, 
@@ -37,7 +25,7 @@ function runMain() {
 			shadowDistance : 5
 		};
 		
-		const presentationCard = addCardPresentationCapability(cardElements, cardOptions);
+		const presentationCard = addCardPresentationCapability(rootNode, cardOptions);
 		presentationCard.LookToward(Vec2.Zero);
 		return presentationCard;
 	}
@@ -228,7 +216,7 @@ function runMain() {
 		document.getElementById('flip-button')?.addEventListener('click', ev=>{
 			flipCollection.itemInUse.forEach(item=>{
 				if (item.assignedCard) {
-					item.assignedCard.Flip();
+					item.assignedCard.AnimatedFlip(!item.assignedCard.isFlipped);
 				}
 			});
 		});

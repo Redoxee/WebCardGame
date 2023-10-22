@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html>
 	<head>
-		<link rel="icon" href="data:;base64,iVBORw0KGgo=">
-		<link rel="stylesheet" type="text/css" href="css/style.css" />	  
+		<link rel='icon' href='data:;base64,iVBORw0KGgo='>
+		<link rel='stylesheet' type='text/css' href='css/style.css' />	  
 	</head>
 	<style>
 		#game-board {
@@ -69,40 +69,40 @@
 		}
 	</style>
 	<body>
-		<div id="game-board">
-			<div id="slide-test" class="half-width border-white third-height">
-				<div id="target-1" class="target"></div>
-				<div id="target-2" class="target"></div>
-				<div id="target-3" class="target"></div>
-				<div id="target-4" class="target"></div>
-				<button id="slide-button">Slide card</button>
-			</div>
-
-			<div id="collection-test" class="half-width border-white third-height">
-				<div id ="mock-collection" class="card-collection">
-				</div>
-			</div>
-
-			<div id="flip-test" class="half-width border-white third-height">
-				<div id="flip-collection" class="card-collection border-white"></div>
-				<button id="flip-button"> Flip!</button>
-			</div>
-
+		<div id='game-board'>
 			<div id='card-root'>
-				<div id='card'>
-					<div id = 'card-item'>
-						<img id="card-bg" class="overlay" src="medias/textures/CardBackground.png"></img>
-						<img id='illustration' class="card-illustration" src="medias/textures/TestImage.png"></img>
-						<img id="card-bg" class="overlay" src="medias/textures/CardFrame.png"></img>
-						<img id='shine' class="overlay shine" src="medias/textures/CardShine.png"></img>
-						<img class="overlay back" src="medias/textures/bg_back_ice.png">
-						<img class="overlay shine back" src="medias/textures/bg_back_shine.png">
-						<img id='shade' class="overlay shade" src="medias/textures/CardShadow.png"></img>
+				<div id='card' class='zoom-item'>
+					<div class = 'card-item'>
+						<img id='card-bg' class='overlay' src='medias/textures/CardBackground.png'></img>
+						<img id='illustration' class='card-illustration' src='medias/textures/TestImage.png'></img>
+						<img id='card-bg' class='overlay' src='medias/textures/CardFrame.png'></img>
+						<img id='shine' class='overlay shine' src='medias/textures/CardShine.png'></img>
+						<img class='overlay back' src='medias/textures/bg_back_ice.png'>
+						<img class='overlay shine back' src='medias/textures/bg_back_shine.png'>
+						<img id='shade' class='overlay shade' src='medias/textures/CardShadow.png'></img>
 					</div>
 				</div>
+			</div>
+
+			<div id='slide-test' class='half-width border-white third-height'>
+				<div id='target-1' class='target'></div>
+				<div id='target-2' class='target'></div>
+				<div id='target-3' class='target'></div>
+				<div id='target-4' class='target'></div>
+				<button id='slide-button'>Slide card</button>
+			</div>
+
+			<div id='collection-test' class='half-width border-white third-height'>
+				<div id ='mock-collection' class='card-collection'>
+				</div>
+			</div>
+
+			<div id='flip-test' class='half-width border-white third-height'>
+				<div id='flip-collection' class='card-collection border-white'></div>
+				<button id='flip-button'> Flip!</button>
 			</div>
 		</div>
 	</body>
 
-	<script src="js/main.js" type="module"></script>
+	<script src='js/main.js' type='module'></script>
 </html>
