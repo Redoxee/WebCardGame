@@ -152,7 +152,7 @@ function addCardPresentationCapability(root : HTMLElement, options : ICardPresen
 			return;
 		}
 
-		card.flipAnimator.StartAnimation(card.isFlipped, 1000);
+		card.flipAnimator.StartAnimation(card.isFlipped, 750);
 	};
 
 	card.lerpAnimator = new CardLerpAnimation(card, 100);
