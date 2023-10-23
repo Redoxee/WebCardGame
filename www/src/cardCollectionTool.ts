@@ -21,13 +21,19 @@ declare global {
 	}
 }
 
+enum ReservationResult {
+	New,
+	Moved,
+	Same,
+}
+
 interface ICardCollection extends HTMLElement {
 	itemPool : ICardCollectionItem[];
 	itemInUse : ICardCollectionItem[];
 	reservingItem : ICardCollectionItem|null;
 	bounds : BoundingRect;
 
-	ReserveSlot : (selector : SlotIndexSelector)=>void;
+	ReserveSlot : (selector : SlotIndexSelector)=>ReservationResult;
 	CancelReservation : ()=>void;
 	AssignCardToReservation : (card : ICardPresentation)=>void;
 	ContainsCard : (card : ICardPresentation) => boolean;
@@ -87,6 +93,7 @@ function setupCardCollection(collectionELement : HTMLElement, params : ICardColl
 
 			cardCollection.bounds.Recompute();
 			cardCollection.SlideAllCardsToAssignedItems();
+			return ReservationResult.New;
 		}
 		else {
 			const reservingIndex = selector(cardCollection.itemInUse);
@@ -109,9 +116,11 @@ function setupCardCollection(collectionELement : HTMLElement, params : ICardColl
 				cardCollection.reservingItem.index = reservingIndex;
 				cardCollection.reservingItem.assignedCard = null;
 				cardCollection.SlideAllCardsToAssignedItems();
+				return ReservationResult.Moved;
 			}
 		}
 
+		return ReservationResult.Same;
 	};
 
 	cardCollection.AssignCardToReservation = (card : ICardPresentation) => {
@@ -234,4 +243,4 @@ function SelectClosestItemSelector(posX : number, posY : number) {
 	return selector;
 }
 
-export { ICardCollection, ICardCollectionParameters, ICollectionEventDetails, setupCardCollection, SelectClosestItemSelector };
+export { ICardCollection, ICardCollectionParameters, ICollectionEventDetails, ReservationResult, setupCardCollection, SelectClosestItemSelector };

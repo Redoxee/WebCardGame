@@ -1,5 +1,11 @@
 import { addCustomStyle, BoundingRect } from './domUtils';
 import { BezierPreset } from './math';
+var ReservationResult;
+(function (ReservationResult) {
+    ReservationResult[ReservationResult["New"] = 0] = "New";
+    ReservationResult[ReservationResult["Moved"] = 1] = "Moved";
+    ReservationResult[ReservationResult["Same"] = 2] = "Same";
+})(ReservationResult || (ReservationResult = {}));
 function setupCardCollection(collectionELement, params) {
     const cardCollection = collectionELement;
     const itemPoolSize = 100;
@@ -36,6 +42,7 @@ function setupCardCollection(collectionELement, params) {
             cardCollection.reservingItem.assignedCard = null;
             cardCollection.bounds.Recompute();
             cardCollection.SlideAllCardsToAssignedItems();
+            return ReservationResult.New;
         }
         else {
             const reservingIndex = selector(cardCollection.itemInUse);
@@ -55,8 +62,10 @@ function setupCardCollection(collectionELement, params) {
                 cardCollection.reservingItem.index = reservingIndex;
                 cardCollection.reservingItem.assignedCard = null;
                 cardCollection.SlideAllCardsToAssignedItems();
+                return ReservationResult.Moved;
             }
         }
+        return ReservationResult.Same;
     };
     cardCollection.AssignCardToReservation = (card) => {
         if (!cardCollection.reservingItem) {
@@ -148,4 +157,4 @@ function SelectClosestItemSelector(posX, posY) {
     };
     return selector;
 }
-export { setupCardCollection, SelectClosestItemSelector };
+export { ReservationResult, setupCardCollection, SelectClosestItemSelector };
