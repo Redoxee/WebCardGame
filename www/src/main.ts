@@ -3,7 +3,7 @@ import {ICardPresentationOptions, addCardPresentationCapability, ICardPresentati
 import {setupSandboxCurves} from './curveSandbox';
 import {uniqueId ,addCustomStyle, BoundingRect} from './domUtils';
 import { cubicInterpolationBezier, cubicInterpolationBezierFirstDerivative, BezierPreset, IBezierParams } from './math';
-import { ICardCollection, setupCardCollection, SelectClosestItemSelector, ICardCollectionParameters } from './cardCollectionTool';
+import { ICardCollection, setupCardCollection, SelectClosestItemSelector, ICardCollectionParameters, ICollectionEventDetails } from './cardCollectionTool';
 
 function runMain() {
 
@@ -218,6 +218,35 @@ function runMain() {
 				if (item.assignedCard) {
 					item.assignedCard.AnimatedFlip(!item.assignedCard.isFlipped);
 				}
+			});
+		});
+	}
+
+	{
+		const zoomCollection = document.getElementById('zoom-collection') as ICardCollection;
+		let zoomedCard : ICardPresentation[] = [];
+		document.getElementById('zoom-button')?.addEventListener('click', ev=>{
+			zoomCollection.itemInUse.forEach(item=>{
+				if (item.assignedCard) {
+					item.assignedCard.SetZoom(2);
+					zoomedCard.push(item.assignedCard);
+				}
+			});
+		});
+
+		zoomCollection.addEventListener('card-detach', (ev) => {
+			ev.detail.card.SetZoom(1);
+			zoomedCard.splice(zoomedCard.findIndex(e=>e.id === ev.detail.card.id), 1);
+		});
+
+		board.addEventListener('mousemove', ev=>{
+			if(!zoomedCard) {
+				return;
+			}
+
+			zoomedCard.forEach(card => {
+				const delatDirection = Vec2.sub(new Vec2(ev.clientX, ev.clientY), card.currentPosition).scale(.5);
+				card.LookToward(delatDirection);
 			});
 		});
 	}

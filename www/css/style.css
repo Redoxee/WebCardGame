@@ -2,7 +2,7 @@ body {
 	display: flex;
 	justify-content: center;
 	align-items: center; 
-	height: 100vh;
+	height: 90vh;
 	background: rgb(4,2,42);
 	background: linear-gradient(0deg, rgba(4,2,42,1) 0%, rgba(39,39,97,1) 29%, rgba(2,2,60,1) 100%);
 	touch-action: none;

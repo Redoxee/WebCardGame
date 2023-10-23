@@ -23,6 +23,10 @@ function cardAnimationCallback(timeStamp : number) {
 
 cardAnimationCallback(performance.now());
 
+interface ICardAnimationCustomEventDetails {
+	animation : CardAnimation
+}
+
 class CardAnimation {
 	id : string;
 	target : ICardPresentation;
@@ -175,4 +179,4 @@ class CardFlipAnimation extends CardAnimation {
 	}
 }
 
-export {CardFlipAnimation, CardLerpAnimation};
+export { CardAnimation, CardFlipAnimation, CardLerpAnimation};

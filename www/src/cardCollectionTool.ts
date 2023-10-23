@@ -11,6 +11,16 @@ interface ICardCollectionItem extends HTMLDivElement {
 
 type SlotIndexSelector = (availableSlots : ICardCollectionItem[]) => number;
 
+interface ICollectionEventDetails {
+	card : ICardPresentation;
+}
+
+declare global {
+	interface GlobalEventHandlersEventMap {
+		"card-detach": CustomEvent<ICollectionEventDetails>;
+	}
+}
+
 interface ICardCollection extends HTMLElement {
 	itemPool : ICardCollectionItem[];
 	itemInUse : ICardCollectionItem[];
@@ -171,6 +181,12 @@ function setupCardCollection(collectionELement : HTMLElement, params : ICardColl
 		cardCollection.removeChild(cardCollection.itemInUse[index]);
 		cardCollection.itemInUse.splice(index, 1);
 		cardCollection.SlideAllCardsToAssignedItems();
+
+		const event : CustomEvent<ICollectionEventDetails> = new CustomEvent('card-detach', { detail: {
+			card
+		}});
+
+		cardCollection.dispatchEvent(event);
 	};
 
 	cardCollection.InsertCardInstant = (card : ICardPresentation, index : number) => {
@@ -218,4 +234,4 @@ function SelectClosestItemSelector(posX : number, posY : number) {
 	return selector;
 }
 
-export {ICardCollection, ICardCollectionParameters, setupCardCollection, SelectClosestItemSelector};
+export { ICardCollection, ICardCollectionParameters, ICollectionEventDetails, setupCardCollection, SelectClosestItemSelector };
