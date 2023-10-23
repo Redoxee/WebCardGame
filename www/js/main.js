@@ -135,6 +135,9 @@ function runMain() {
         const element = allCardCollectionElements.item(index);
         allCardCollections.push(setupCardCollection(element, cardCollectionParams));
     }
+    const shuffleCollectionElement = document.getElementById('shuffle-collection');
+    const shuffleCollection = setupCardCollection(shuffleCollectionElement, {});
+    allCardCollections.push(shuffleCollection);
     board.addEventListener('mousemove', (ev) => {
         const mousePosition = new Vec2(ev.clientX, ev.clientY);
         let currentHoveredCollection = null;
