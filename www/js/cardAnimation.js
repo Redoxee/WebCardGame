@@ -125,4 +125,4 @@ class CardFlipAnimation extends CardAnimation {
         return false;
     }
 }
-export { CardFlipAnimation, CardLerpAnimation };
+export { CardAnimation, CardFlipAnimation, CardLerpAnimation };

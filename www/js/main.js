@@ -4,7 +4,7 @@ import { uniqueId, BoundingRect } from './domUtils';
 import { BezierPreset } from './math';
 import { setupCardCollection, SelectClosestItemSelector } from './cardCollectionTool';
 function runMain() {
-    var _a;
+    var _a, _b;
     const board = document.getElementById('game-board');
     const container = document.getElementById('card-root');
     let hoveredCardCollection = null;
@@ -164,6 +164,31 @@ function runMain() {
                 if (item.assignedCard) {
                     item.assignedCard.AnimatedFlip(!item.assignedCard.isFlipped);
                 }
+            });
+        });
+    }
+    {
+        const zoomCollection = document.getElementById('zoom-collection');
+        let zoomedCard = [];
+        (_b = document.getElementById('zoom-button')) === null || _b === void 0 ? void 0 : _b.addEventListener('click', ev => {
+            zoomCollection.itemInUse.forEach(item => {
+                if (item.assignedCard) {
+                    item.assignedCard.SetZoom(2);
+                    zoomedCard.push(item.assignedCard);
+                }
+            });
+        });
+        zoomCollection.addEventListener('card-detach', (ev) => {
+            ev.detail.card.SetZoom(1);
+            zoomedCard.splice(zoomedCard.findIndex(e => e.id === ev.detail.card.id), 1);
+        });
+        board.addEventListener('mousemove', ev => {
+            if (!zoomedCard) {
+                return;
+            }
+            zoomedCard.forEach(card => {
+                const delatDirection = Vec2.sub(new Vec2(ev.clientX, ev.clientY), card.currentPosition).scale(.5);
+                card.LookToward(delatDirection);
             });
         });
     }

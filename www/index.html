@@ -18,13 +18,20 @@
 			flex-direction: row;
 			flex-wrap: wrap;
 			gap: 40%;
-			padding:3em;
+			padding:0 3em;
 		}
 
 		.target {
 			background-color: burlywood;
 			height: 3px;
 			width: 3px;
+		}
+
+		#collection-test {
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			justify-content: center;
 		}
 
 		#mock-collection {
@@ -49,6 +56,21 @@
 		}
 
 		#flip-collection {
+			width: 6em;
+			height: 9em;
+			display: flex;
+			justify-content: center;
+			align-items: center;
+		}
+
+		#zoom-test {
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			justify-content: center;
+		}
+
+		#zoom-collection {
 			width: 6em;
 			height: 9em;
 			display: flex;
@@ -100,6 +122,11 @@
 			<div id='flip-test' class='half-width border-white third-height'>
 				<div id='flip-collection' class='card-collection border-white'></div>
 				<button id='flip-button'> Flip!</button>
+			</div>
+
+			<div id='zoom-test' class='half-width border-white third-height'>
+				<div id='zoom-collection' class='card-collection border-white'></div>
+				<button id='zoom-button'> Zoom</button>
 			</div>
 		</div>
 	</body>

@@ -106,6 +106,10 @@ function setupCardCollection(collectionELement, params) {
         cardCollection.removeChild(cardCollection.itemInUse[index]);
         cardCollection.itemInUse.splice(index, 1);
         cardCollection.SlideAllCardsToAssignedItems();
+        const event = new CustomEvent('card-detach', { detail: {
+                card
+            } });
+        cardCollection.dispatchEvent(event);
     };
     cardCollection.InsertCardInstant = (card, index) => {
         const newItem = cardCollection.itemPool.pop();
