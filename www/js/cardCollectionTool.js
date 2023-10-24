@@ -157,4 +157,12 @@ function SelectClosestItemSelector(posX, posY) {
     };
     return selector;
 }
-export { ReservationResult, setupCardCollection, SelectClosestItemSelector };
+function setupDeckCollection(collectionElement, params) {
+    const deck = setupCardCollection(collectionElement, params);
+    deck.ShuffleAnimation = () => {
+        deck.itemInUse.forEach((it, index) => { var _a; return (_a = it.assignedCard) === null || _a === void 0 ? void 0 : _a.circlingAnimation.StartAnimation((index / deck.itemInUse.length) * 300, (deck.itemInUse.length - index).toString()); });
+        deck.itemInUse = deck.itemInUse.reverse();
+    };
+    return deck;
+}
+export { ReservationResult, setupCardCollection, SelectClosestItemSelector, setupDeckCollection };

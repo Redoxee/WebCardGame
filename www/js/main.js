@@ -2,7 +2,7 @@ import { Vec2, Vec3 } from './vec';
 import { addCardPresentationCapability } from './cardTool';
 import { uniqueId, BoundingRect } from './domUtils';
 import { BezierPreset } from './math';
-import { setupCardCollection, SelectClosestItemSelector, ReservationResult } from './cardCollectionTool';
+import { setupCardCollection, SelectClosestItemSelector, ReservationResult, setupDeckCollection } from './cardCollectionTool';
 function runMain() {
     var _a, _b, _c;
     const board = document.getElementById('game-board');
@@ -204,10 +204,10 @@ function runMain() {
     }
     {
         const shuffleCollectionElement = document.getElementById('shuffle-collection');
-        const shuffleCollection = setupCardCollection(shuffleCollectionElement, {});
+        const shuffleCollection = setupDeckCollection(shuffleCollectionElement, {});
         allCardCollections.push(shuffleCollection);
         (_c = document.getElementById('shuffle-button')) === null || _c === void 0 ? void 0 : _c.addEventListener('click', _ => {
-            shuffleCollection.itemInUse.forEach((it, index) => { var _a; return (_a = it.assignedCard) === null || _a === void 0 ? void 0 : _a.circlingAnimation.StartAnimation((index / shuffleCollection.itemInUse.length) * 300); });
+            shuffleCollection.ShuffleAnimation();
         });
     }
 }

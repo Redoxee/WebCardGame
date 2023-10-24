@@ -243,4 +243,22 @@ function SelectClosestItemSelector(posX : number, posY : number) {
 	return selector;
 }
 
-export { ICardCollection, ICardCollectionParameters, ICollectionEventDetails, ReservationResult, setupCardCollection, SelectClosestItemSelector };
+interface IDeckParameters extends ICardCollectionParameters {
+}
+
+interface IDeckCollection extends ICardCollection {
+	ShuffleAnimation():void;
+}
+
+function setupDeckCollection(collectionElement : HTMLElement, params : IDeckParameters) {
+	const deck = setupCardCollection(collectionElement, params) as IDeckCollection;
+
+	deck.ShuffleAnimation = () => {
+		deck.itemInUse.forEach((it,index)=>it.assignedCard?.circlingAnimation.StartAnimation((index / deck.itemInUse.length) * 300, (deck.itemInUse.length - index).toString()));
+		deck.itemInUse = deck.itemInUse.reverse();
+	}
+
+	return deck;
+}
+
+export { ICardCollection, ICardCollectionParameters, IDeckCollection, ICollectionEventDetails, ReservationResult, setupCardCollection, SelectClosestItemSelector, setupDeckCollection };

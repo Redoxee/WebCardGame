@@ -181,29 +181,27 @@ class CardFlipAnimation extends CardAnimation {
 
 class CirclingAnimation extends CardAnimation {
 	duration : number;
-	endTime : number;
 	elapsedTime : number;
 	radius : number;
 	circleCenter : Vec2;
 	startPosition : Vec2;
 	angleDelta : number;
 	direction : number;
+	targetZIndex : string;
 
 	constructor(target : ICardPresentation, radius : number, duration : number) {
 		super(target);
 		this.duration = duration;
-		this.endTime = 0;
 		this.elapsedTime = 0;
 		this.radius = radius;
 		this.circleCenter = Vec2.Zero;
 		this.startPosition = Vec2.Zero;
 		this.angleDelta = 0;
 		this.direction = 1;
+		this.targetZIndex = "";
 	}
 
-	StartAnimation(delay : number) {
-		const startTime = performance.now() - frameDelay;
-		this.endTime = startTime + this.duration;
+	StartAnimation(delay : number, targetZIndex : string) {
 		this.elapsedTime = -delay;
 		
 		if (!cardAnimations.find((e)=>e.id === this.id)) {
@@ -221,6 +219,8 @@ class CirclingAnimation extends CardAnimation {
 		else {
 			this.direction = -1;
 		}
+
+		this.targetZIndex = targetZIndex;
 	}
 
 	AnimationFrame(dt: number): boolean {
@@ -246,6 +246,10 @@ class CirclingAnimation extends CardAnimation {
 		const a = t * 2 * Math.PI * this.direction + this.angleDelta;
 		const position = Vec2.add(this.circleCenter, (new Vec2(Math.sin(a), Math.cos(a))).scale(this.radius));
 		this.target.SetPosition(position);
+
+		if(t>.5) {
+			this.target.style.zIndex = this.targetZIndex;
+		}
 
 		return false;
 	}
