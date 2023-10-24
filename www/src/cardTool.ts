@@ -1,6 +1,6 @@
 import { Vec2, Vec3 } from './vec';
 import { addCustomStyle, BoundingRect } from './domUtils';
-import { CardLerpAnimation, CardFlipAnimation } from './cardAnimation';
+import { CardLerpAnimation, CardFlipAnimation, CirclingAnimation } from './cardAnimation';
 
 function rotatePitchRoll(vec : Vec3, pitch : number, roll : number) {
 	const cp = Math.cos(pitch);
@@ -22,6 +22,7 @@ interface ICardPresentation extends HTMLElement {
 	root : HTMLElement;
 	lerpAnimator : CardLerpAnimation;
 	flipAnimator : CardFlipAnimation;
+	circlingAnimation : CirclingAnimation;
 	currentPosition : Vec2;
 	isFlipped : boolean;
 
@@ -161,6 +162,8 @@ function addCardPresentationCapability(root : HTMLElement, options : ICardPresen
 	const bounds = new BoundingRect(card);
 	card.currentPosition = bounds.centerPosition.clone();
 	card.SetFlip(false);
+
+	card.circlingAnimation = new CirclingAnimation(card, 30, 1000);
 
 	return card;
 }
