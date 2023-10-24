@@ -3,15 +3,17 @@ import {ICardPresentationOptions, addCardPresentationCapability, ICardPresentati
 import {setupSandboxCurves} from './curveSandbox';
 import {uniqueId ,addCustomStyle, BoundingRect} from './domUtils';
 import { cubicInterpolationBezier, cubicInterpolationBezierFirstDerivative, BezierPreset, IBezierParams } from './math';
-import { ICardCollection, setupCardCollection, SelectClosestItemSelector, ICardCollectionParameters, ICollectionEventDetails } from './cardCollectionTool';
+import { ICardCollection, setupCardCollection, SelectClosestItemSelector, ICardCollectionParameters, ICollectionEventDetails, ReservationResult, setupDeckCollection } from './cardCollectionTool';
 
 function runMain() {
 
 	const board = document.getElementById('game-board')!;
 	const container = document.getElementById('card-root')!;
-	
+
 	let hoveredCardCollection : ICardCollection|null = null;
 	
+	const sfxFlip = Array.from(document.getElementsByClassName('flip-sfx')).map(e=>e as HTMLAudioElement);
+
 	const draggedZindex = 100;
 
 	function makeCard(rootNode : HTMLElement) : ICardPresentation {
@@ -83,6 +85,11 @@ function runMain() {
 				collection.DetachCard(card);
 			}
 		});
+	}
+
+	function playRandomFlipSfx() {
+		const index = Math.floor(Math.random() * sfxFlip.length);
+		sfxFlip[index].play();
 	}
 
 	const testButton = document.getElementById('slide-button') as HTMLButtonElement;
@@ -193,13 +200,17 @@ function runMain() {
 		if (currentHoveredCollection !== hoveredCardCollection) {
 			if (hoveredCardCollection && hoveredCardCollection.reservingItem) {
 				hoveredCardCollection.CancelReservation();
+				playRandomFlipSfx();
 			}
 			
 			hoveredCardCollection = currentHoveredCollection;
 		}
 
 		if (currentHoveredCollection && draggedObject) {
-			currentHoveredCollection.ReserveSlot(SelectClosestItemSelector(ev.clientX, ev.clientY));
+			const reservationResult = currentHoveredCollection.ReserveSlot(SelectClosestItemSelector(ev.clientX, ev.clientY));
+			if (reservationResult === ReservationResult.New) {
+				playRandomFlipSfx();
+			}
 		}
 	});
 	
@@ -217,6 +228,7 @@ function runMain() {
 			flipCollection.itemInUse.forEach(item=>{
 				if (item.assignedCard) {
 					item.assignedCard.AnimatedFlip(!item.assignedCard.isFlipped);
+					playRandomFlipSfx();
 				}
 			});
 		});
@@ -248,6 +260,15 @@ function runMain() {
 				const delatDirection = Vec2.sub(new Vec2(ev.clientX, ev.clientY), card.currentPosition).scale(.5);
 				card.LookToward(delatDirection);
 			});
+		});
+	}
+
+	{	
+		const shuffleCollectionElement = document.getElementById('shuffle-collection') as HTMLElement;
+		const shuffleCollection = setupDeckCollection(shuffleCollectionElement, {});
+		allCardCollections.push(shuffleCollection);
+		document.getElementById('shuffle-button')?.addEventListener('click', _=>{
+			shuffleCollection.ShuffleAnimation();
 		});
 	}
 }

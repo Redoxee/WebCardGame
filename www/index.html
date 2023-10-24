@@ -9,8 +9,9 @@
 			display: flex;
 			flex-direction: row;
 			flex-wrap: wrap;
-			align-items: center;
-			gap : 1em;
+			align-items: flex-start;
+			gap : .5em 1em;
+			height: auto;
 		}
 
 		#slide-test {
@@ -19,6 +20,7 @@
 			flex-wrap: wrap;
 			gap: 40%;
 			padding:0 3em;
+			height: 11em;
 		}
 
 		.target {
@@ -79,32 +81,47 @@
 		}
 
 		.half-width {
-			width: 45%;
+			width: 44%;
 		}
 
 		.third-height {
-			height: 33%;
+			height: 20%;
 		}
 
 		.border-white {
 			border: solid white 3px;
 		}
+
+		#deck-shuffle-test {
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			justify-content: center;
+		}
+
+		.mock-deck {
+			width: 6em;
+			height: 9em;
+			border: solid white;
+			position: relative;
+		}
+
+		.mock-deck>* {
+			position: relative;
+			top : 50%;
+			left : 50%;
+			width: 0;
+			height: 0;
+
+			transform: translate(-50%, -50%);
+		}
 	</style>
 	<body>
 		<div id='game-board'>
-			<div id='card-root'>
-				<div id='card' class='zoom-item'>
-					<div class = 'card-item'>
-						<img id='card-bg' class='overlay' src='medias/textures/CardBackground.png'></img>
-						<img id='illustration' class='card-illustration' src='medias/textures/TestImage.png'></img>
-						<img id='card-bg' class='overlay' src='medias/textures/CardFrame.png'></img>
-						<img id='shine' class='overlay shine' src='medias/textures/CardShine.png'></img>
-						<img class='overlay back' src='medias/textures/bg_back_ice.png'>
-						<img class='overlay shine back' src='medias/textures/bg_back_shine.png'>
-						<img id='shade' class='overlay shade' src='medias/textures/CardShadow.png'></img>
-					</div>
-				</div>
-			</div>
+			<audio src="medias/audio/Flip1.wav" class="flip-sfx" preload="auto"></audio>
+			<audio src="medias/audio/Flip2.wav" class="flip-sfx" preload="auto"></audio>
+			<audio src="medias/audio/Flip3.wav" class="flip-sfx" preload="auto"></audio>
+			<audio src="medias/audio/Flip4.wav" class="flip-sfx" preload="auto"></audio>
 
 			<div id='slide-test' class='half-width border-white third-height'>
 				<div id='target-1' class='target'></div>
@@ -127,6 +144,26 @@
 			<div id='zoom-test' class='half-width border-white third-height'>
 				<div id='zoom-collection' class='card-collection border-white'></div>
 				<button id='zoom-button'> Zoom</button>
+			</div>
+
+			<div id='deck-shuffle-test' class='half-width border-white third-height'>
+				<div id='shuffle-collection' class='border-white mock-deck'>
+				</div>
+				<button id='shuffle-button'> Shuffle</button>
+			</div>
+
+			<div id='card-root'>
+				<div id='card' class='zoom-item'>
+					<div class = 'card-item'>
+						<img id='card-bg' class='overlay' src='medias/textures/CardBackground.png'></img>
+						<img id='illustration' class='card-illustration' src='medias/textures/TestImage.png'></img>
+						<img class='overlay' src='medias/textures/CardFrame.png'></img>
+						<img id='shine' class='overlay shine' src='medias/textures/CardShine.png'></img>
+						<img class='overlay back' src='medias/textures/bg_back_ice.png'>
+						<img class='overlay shine back' src='medias/textures/bg_back_shine.png'>
+						<img id='shade' class='overlay shade' src='medias/textures/CardShadow.png'></img>
+					</div>
+				</div>
 			</div>
 		</div>
 	</body>

@@ -2,12 +2,13 @@ import { Vec2, Vec3 } from './vec';
 import { addCardPresentationCapability } from './cardTool';
 import { uniqueId, BoundingRect } from './domUtils';
 import { BezierPreset } from './math';
-import { setupCardCollection, SelectClosestItemSelector } from './cardCollectionTool';
+import { setupCardCollection, SelectClosestItemSelector, ReservationResult, setupDeckCollection } from './cardCollectionTool';
 function runMain() {
-    var _a, _b;
+    var _a, _b, _c;
     const board = document.getElementById('game-board');
     const container = document.getElementById('card-root');
     let hoveredCardCollection = null;
+    const sfxFlip = Array.from(document.getElementsByClassName('flip-sfx')).map(e => e);
     const draggedZindex = 100;
     function makeCard(rootNode) {
         const cardClassName = `PresentationCard${uniqueId()}`;
@@ -64,6 +65,10 @@ function runMain() {
                 collection.DetachCard(card);
             }
         });
+    }
+    function playRandomFlipSfx() {
+        const index = Math.floor(Math.random() * sfxFlip.length);
+        sfxFlip[index].play();
     }
     const testButton = document.getElementById('slide-button');
     const targets = document.getElementById('slide-test').getElementsByClassName('target');
@@ -143,11 +148,15 @@ function runMain() {
         if (currentHoveredCollection !== hoveredCardCollection) {
             if (hoveredCardCollection && hoveredCardCollection.reservingItem) {
                 hoveredCardCollection.CancelReservation();
+                playRandomFlipSfx();
             }
             hoveredCardCollection = currentHoveredCollection;
         }
         if (currentHoveredCollection && draggedObject) {
-            currentHoveredCollection.ReserveSlot(SelectClosestItemSelector(ev.clientX, ev.clientY));
+            const reservationResult = currentHoveredCollection.ReserveSlot(SelectClosestItemSelector(ev.clientX, ev.clientY));
+            if (reservationResult === ReservationResult.New) {
+                playRandomFlipSfx();
+            }
         }
     });
     {
@@ -163,6 +172,7 @@ function runMain() {
             flipCollection.itemInUse.forEach(item => {
                 if (item.assignedCard) {
                     item.assignedCard.AnimatedFlip(!item.assignedCard.isFlipped);
+                    playRandomFlipSfx();
                 }
             });
         });
@@ -190,6 +200,14 @@ function runMain() {
                 const delatDirection = Vec2.sub(new Vec2(ev.clientX, ev.clientY), card.currentPosition).scale(.5);
                 card.LookToward(delatDirection);
             });
+        });
+    }
+    {
+        const shuffleCollectionElement = document.getElementById('shuffle-collection');
+        const shuffleCollection = setupDeckCollection(shuffleCollectionElement, {});
+        allCardCollections.push(shuffleCollection);
+        (_c = document.getElementById('shuffle-button')) === null || _c === void 0 ? void 0 : _c.addEventListener('click', _ => {
+            shuffleCollection.ShuffleAnimation();
         });
     }
 }

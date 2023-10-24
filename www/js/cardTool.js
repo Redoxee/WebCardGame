@@ -1,6 +1,6 @@
 import { Vec3 } from './vec';
 import { addCustomStyle, BoundingRect } from './domUtils';
-import { CardLerpAnimation, CardFlipAnimation } from './cardAnimation';
+import { CardLerpAnimation, CardFlipAnimation, CirclingAnimation } from './cardAnimation';
 function rotatePitchRoll(vec, pitch, roll) {
     const cp = Math.cos(pitch);
     const sp = Math.sin(pitch);
@@ -102,6 +102,7 @@ function addCardPresentationCapability(root, options) {
     const bounds = new BoundingRect(card);
     card.currentPosition = bounds.centerPosition.clone();
     card.SetFlip(false);
+    card.circlingAnimation = new CirclingAnimation(card, 30, 1000);
     return card;
 }
 export { addCardPresentationCapability, CardLerpAnimation };

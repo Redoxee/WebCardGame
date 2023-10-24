@@ -1,5 +1,11 @@
 import { addCustomStyle, BoundingRect } from './domUtils';
 import { BezierPreset } from './math';
+var ReservationResult;
+(function (ReservationResult) {
+    ReservationResult[ReservationResult["New"] = 0] = "New";
+    ReservationResult[ReservationResult["Moved"] = 1] = "Moved";
+    ReservationResult[ReservationResult["Same"] = 2] = "Same";
+})(ReservationResult || (ReservationResult = {}));
 function setupCardCollection(collectionELement, params) {
     const cardCollection = collectionELement;
     const itemPoolSize = 100;
@@ -36,6 +42,7 @@ function setupCardCollection(collectionELement, params) {
             cardCollection.reservingItem.assignedCard = null;
             cardCollection.bounds.Recompute();
             cardCollection.SlideAllCardsToAssignedItems();
+            return ReservationResult.New;
         }
         else {
             const reservingIndex = selector(cardCollection.itemInUse);
@@ -55,8 +62,10 @@ function setupCardCollection(collectionELement, params) {
                 cardCollection.reservingItem.index = reservingIndex;
                 cardCollection.reservingItem.assignedCard = null;
                 cardCollection.SlideAllCardsToAssignedItems();
+                return ReservationResult.Moved;
             }
         }
+        return ReservationResult.Same;
     };
     cardCollection.AssignCardToReservation = (card) => {
         if (!cardCollection.reservingItem) {
@@ -148,4 +157,21 @@ function SelectClosestItemSelector(posX, posY) {
     };
     return selector;
 }
-export { setupCardCollection, SelectClosestItemSelector };
+function setupDeckCollection(collectionElement, params) {
+    const deck = setupCardCollection(collectionElement, params);
+    deck.ShuffleAnimation = () => {
+        var _a;
+        if (deck.itemInUse.length < 1) {
+            return;
+        }
+        deck.itemInUse.splice(0, 0, deck.itemInUse.pop());
+        for (let index = 0; index < deck.itemInUse.length; ++index) {
+            const anglePercentage = index / deck.itemInUse.length;
+            const delay = anglePercentage * 100;
+            const nextZindex = index;
+            (_a = deck.itemInUse[index].assignedCard) === null || _a === void 0 ? void 0 : _a.circlingAnimation.StartAnimation(delay, anglePercentage, nextZindex.toString());
+        }
+    };
+    return deck;
+}
+export { ReservationResult, setupCardCollection, SelectClosestItemSelector, setupDeckCollection };
