@@ -160,8 +160,17 @@ function SelectClosestItemSelector(posX, posY) {
 function setupDeckCollection(collectionElement, params) {
     const deck = setupCardCollection(collectionElement, params);
     deck.ShuffleAnimation = () => {
-        deck.itemInUse.forEach((it, index) => { var _a; return (_a = it.assignedCard) === null || _a === void 0 ? void 0 : _a.circlingAnimation.StartAnimation((index / deck.itemInUse.length) * 300, (deck.itemInUse.length - index).toString()); });
-        deck.itemInUse = deck.itemInUse.reverse();
+        var _a;
+        if (deck.itemInUse.length < 1) {
+            return;
+        }
+        deck.itemInUse.splice(0, 0, deck.itemInUse.pop());
+        for (let index = 0; index < deck.itemInUse.length; ++index) {
+            const anglePercentage = index / deck.itemInUse.length;
+            const delay = anglePercentage * 100;
+            const nextZindex = index;
+            (_a = deck.itemInUse[index].assignedCard) === null || _a === void 0 ? void 0 : _a.circlingAnimation.StartAnimation(delay, anglePercentage, nextZindex.toString());
+        }
     };
     return deck;
 }

@@ -201,14 +201,14 @@ class CirclingAnimation extends CardAnimation {
 		this.targetZIndex = "";
 	}
 
-	StartAnimation(delay : number, targetZIndex : string) {
+	StartAnimation(delay : number, anglePercentage : number, targetZIndex : string) {
 		this.elapsedTime = -delay;
 		
 		if (!cardAnimations.find((e)=>e.id === this.id)) {
 			cardAnimations.push(this);
 		}
 		
-		const angleDelta = Math.random() * Math.PI * 2;
+		const angleDelta = anglePercentage * Math.PI * 2;
 		this.circleCenter = Vec2.sub(this.target.currentPosition, new Vec2(Math.sin(angleDelta), Math.cos(angleDelta)).scale(this.radius));
 		this.angleDelta = angleDelta;
 		this.startPosition = this.target.currentPosition;

@@ -254,8 +254,19 @@ function setupDeckCollection(collectionElement : HTMLElement, params : IDeckPara
 	const deck = setupCardCollection(collectionElement, params) as IDeckCollection;
 
 	deck.ShuffleAnimation = () => {
-		deck.itemInUse.forEach((it,index)=>it.assignedCard?.circlingAnimation.StartAnimation((index / deck.itemInUse.length) * 300, (deck.itemInUse.length - index).toString()));
-		deck.itemInUse = deck.itemInUse.reverse();
+		if (deck.itemInUse.length < 1) {
+			return;
+		}
+
+		deck.itemInUse.splice(0, 0, deck.itemInUse.pop()!);
+
+		for(let index = 0; index < deck.itemInUse.length; ++index) {
+			const anglePercentage = index / deck.itemInUse.length;
+			const delay = anglePercentage * 100;
+			const nextZindex = index;
+
+			deck.itemInUse[index].assignedCard?.circlingAnimation.StartAnimation(delay, anglePercentage, nextZindex.toString());
+		}
 	}
 
 	return deck;
