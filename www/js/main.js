@@ -2,9 +2,9 @@ import { Vec2, Vec3 } from './vec';
 import { addCardPresentationCapability } from './cardTool';
 import { uniqueId, BoundingRect } from './domUtils';
 import { BezierPreset } from './math';
-import { setupCardCollection, SelectClosestItemSelector, ReservationResult } from './cardCollectionTool';
+import { setupCardCollection, SelectClosestItemSelector, ReservationResult, setupDeckCollection } from './cardCollectionTool';
 function runMain() {
-    var _a, _b;
+    var _a, _b, _c;
     const board = document.getElementById('game-board');
     const container = document.getElementById('card-root');
     let hoveredCardCollection = null;
@@ -200,6 +200,14 @@ function runMain() {
                 const delatDirection = Vec2.sub(new Vec2(ev.clientX, ev.clientY), card.currentPosition).scale(.5);
                 card.LookToward(delatDirection);
             });
+        });
+    }
+    {
+        const shuffleCollectionElement = document.getElementById('shuffle-collection');
+        const shuffleCollection = setupDeckCollection(shuffleCollectionElement, {});
+        allCardCollections.push(shuffleCollection);
+        (_c = document.getElementById('shuffle-button')) === null || _c === void 0 ? void 0 : _c.addEventListener('click', _ => {
+            shuffleCollection.ShuffleAnimation();
         });
     }
 }

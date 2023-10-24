@@ -157,4 +157,21 @@ function SelectClosestItemSelector(posX, posY) {
     };
     return selector;
 }
-export { ReservationResult, setupCardCollection, SelectClosestItemSelector };
+function setupDeckCollection(collectionElement, params) {
+    const deck = setupCardCollection(collectionElement, params);
+    deck.ShuffleAnimation = () => {
+        var _a;
+        if (deck.itemInUse.length < 1) {
+            return;
+        }
+        deck.itemInUse.splice(0, 0, deck.itemInUse.pop());
+        for (let index = 0; index < deck.itemInUse.length; ++index) {
+            const anglePercentage = index / deck.itemInUse.length;
+            const delay = anglePercentage * 100;
+            const nextZindex = index;
+            (_a = deck.itemInUse[index].assignedCard) === null || _a === void 0 ? void 0 : _a.circlingAnimation.StartAnimation(delay, anglePercentage, nextZindex.toString());
+        }
+    };
+    return deck;
+}
+export { ReservationResult, setupCardCollection, SelectClosestItemSelector, setupDeckCollection };

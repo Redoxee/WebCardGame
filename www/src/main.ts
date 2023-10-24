@@ -3,7 +3,7 @@ import {ICardPresentationOptions, addCardPresentationCapability, ICardPresentati
 import {setupSandboxCurves} from './curveSandbox';
 import {uniqueId ,addCustomStyle, BoundingRect} from './domUtils';
 import { cubicInterpolationBezier, cubicInterpolationBezierFirstDerivative, BezierPreset, IBezierParams } from './math';
-import { ICardCollection, setupCardCollection, SelectClosestItemSelector, ICardCollectionParameters, ICollectionEventDetails, ReservationResult } from './cardCollectionTool';
+import { ICardCollection, setupCardCollection, SelectClosestItemSelector, ICardCollectionParameters, ICollectionEventDetails, ReservationResult, setupDeckCollection } from './cardCollectionTool';
 
 function runMain() {
 
@@ -260,6 +260,15 @@ function runMain() {
 				const delatDirection = Vec2.sub(new Vec2(ev.clientX, ev.clientY), card.currentPosition).scale(.5);
 				card.LookToward(delatDirection);
 			});
+		});
+	}
+
+	{	
+		const shuffleCollectionElement = document.getElementById('shuffle-collection') as HTMLElement;
+		const shuffleCollection = setupDeckCollection(shuffleCollectionElement, {});
+		allCardCollections.push(shuffleCollection);
+		document.getElementById('shuffle-button')?.addEventListener('click', _=>{
+			shuffleCollection.ShuffleAnimation();
 		});
 	}
 }

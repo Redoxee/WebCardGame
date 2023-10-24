@@ -179,4 +179,80 @@ class CardFlipAnimation extends CardAnimation {
 	}
 }
 
-export { CardAnimation, CardFlipAnimation, CardLerpAnimation};
+class CirclingAnimation extends CardAnimation {
+	duration : number;
+	elapsedTime : number;
+	radius : number;
+	circleCenter : Vec2;
+	startPosition : Vec2;
+	angleDelta : number;
+	direction : number;
+	targetZIndex : string;
+
+	constructor(target : ICardPresentation, radius : number, duration : number) {
+		super(target);
+		this.duration = duration;
+		this.elapsedTime = 0;
+		this.radius = radius;
+		this.circleCenter = Vec2.Zero;
+		this.startPosition = Vec2.Zero;
+		this.angleDelta = 0;
+		this.direction = 1;
+		this.targetZIndex = "";
+	}
+
+	StartAnimation(delay : number, anglePercentage : number, targetZIndex : string) {
+		this.elapsedTime = -delay;
+		
+		if (!cardAnimations.find((e)=>e.id === this.id)) {
+			cardAnimations.push(this);
+		}
+		
+		const angleDelta = anglePercentage * Math.PI * 2;
+		this.circleCenter = Vec2.sub(this.target.currentPosition, new Vec2(Math.sin(angleDelta), Math.cos(angleDelta)).scale(this.radius));
+		this.angleDelta = angleDelta;
+		this.startPosition = this.target.currentPosition;
+		this.target.dispatchEvent(this.startEvent);
+		if(Math.random() > .5) {
+			this.direction = 1;
+		}
+		else {
+			this.direction = -1;
+		}
+
+		this.targetZIndex = targetZIndex;
+	}
+
+	AnimationFrame(dt: number): boolean {
+		this.elapsedTime += dt;
+		if (this.elapsedTime > this.duration || this.duration === 0)
+		{
+			this.target.SetPosition(this.startPosition);
+			return true;
+		}
+
+		if(this.elapsedTime < 0) {
+			// delay hasn't finished yet
+			return false;
+		}
+
+		// Animation time from 0 to 1
+		let t = this.elapsedTime / this.duration;
+
+		// Ease in out, t is still in the 0 1 range
+		t = (Math.sin((t - .5) * Math.PI) + 1) / 2;
+		t = t * t;
+
+		const a = t * 2 * Math.PI * this.direction + this.angleDelta;
+		const position = Vec2.add(this.circleCenter, (new Vec2(Math.sin(a), Math.cos(a))).scale(this.radius));
+		this.target.SetPosition(position);
+
+		if(t>.5) {
+			this.target.style.zIndex = this.targetZIndex;
+		}
+
+		return false;
+	}
+}
+
+export { CardAnimation, CardFlipAnimation, CardLerpAnimation, CirclingAnimation };
