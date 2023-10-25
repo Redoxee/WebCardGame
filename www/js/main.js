@@ -4,12 +4,22 @@ import { uniqueId, BoundingRect } from './domUtils';
 import { BezierPreset } from './math';
 import { setupCardCollection, SelectClosestItemSelector, ReservationResult, setupDeckCollection } from './cardCollectionTool';
 function runMain() {
-    var _a, _b, _c;
-    const board = document.getElementById('game-board');
-    const container = document.getElementById('card-root');
-    let hoveredCardCollection = null;
-    const sfxFlip = Array.from(document.getElementsByClassName('flip-sfx')).map(e => e);
     const draggedZindex = 100;
+    const displayedCardItemParams = {
+        itemStyle: "width : 5em; height: 5em",
+    };
+    let hoveredCardCollection = null;
+    const allCardCollections = [];
+    const board = document.getElementById('game-board');
+    const mockCard = document.getElementById('mock-card');
+    mockCard.parentNode.removeChild(mockCard);
+    const sfxFlip = Array.from(document.getElementsByClassName('flip-sfx')).map(e => e);
+    const shopDeck = setupDeckCollection(document.getElementById('shop-deck'), {});
+    const shopBoard = setupCardCollection(document.getElementById('shop'), {});
+    const playedCards = setupCardCollection(document.getElementById('played-cards'), displayedCardItemParams);
+    const playerDeck = setupDeckCollection(document.getElementById('player-deck'), {});
+    const playerHand = setupCardCollection(document.getElementById('player-hand'), displayedCardItemParams);
+    const playerDiscard = setupDeckCollection(document.getElementById('player-discard'), {});
     function makeCard(rootNode) {
         const cardClassName = `PresentationCard${uniqueId()}`;
         rootNode.classList.add(cardClassName);
@@ -23,7 +33,6 @@ function runMain() {
         presentationCard.LookToward(Vec2.Zero);
         return presentationCard;
     }
-    const debugCard = makeCard(container);
     let draggedObject = null;
     function startInput(card) {
         draggedObject = card;
@@ -32,7 +41,7 @@ function runMain() {
             hoveredCardCollection.ReserveSlot(SelectClosestItemSelector(card.currentPosition.x, card.currentPosition.y));
         }
         card.style.zIndex = draggedZindex.toString();
-        debugCard.SetSmoothOrientation(false);
+        card.SetSmoothOrientation(false);
     }
     function endInput() {
         if (draggedObject) {
@@ -45,6 +54,7 @@ function runMain() {
     }
     function setupCardInput(targetCard) {
         targetCard.root.addEventListener('mousedown', (_) => {
+            console.log('hello');
             startInput(targetCard);
         });
         targetCard.root.addEventListener("touchstart", (ev) => {
@@ -58,7 +68,6 @@ function runMain() {
             endInput();
         }, false);
     }
-    setupCardInput(debugCard);
     function DetachCardFromAnyCollection(card) {
         allCardCollections.forEach(collection => {
             if (collection.ContainsCard(card)) {
@@ -70,15 +79,6 @@ function runMain() {
         const index = Math.floor(Math.random() * sfxFlip.length);
         sfxFlip[index].play();
     }
-    const testButton = document.getElementById('slide-button');
-    const targets = document.getElementById('slide-test').getElementsByClassName('target');
-    let currentIndex = 0;
-    testButton.addEventListener('click', (_ev) => {
-        currentIndex = (currentIndex + 1) % targets.length;
-        const targetPosition = new BoundingRect(targets.item(currentIndex));
-        DetachCardFromAnyCollection(debugCard);
-        debugCard.lerpAnimator.StartAnimation(debugCard.currentPosition, targetPosition.centerPosition, .65, BezierPreset.EaseInOut);
-    });
     function boardMove(card, posX, posY) {
         const startPosition = new BoundingRect(card.root);
         const start = startPosition.centerPosition;
@@ -117,24 +117,6 @@ function runMain() {
     board.addEventListener('mouseup', () => {
         endInput();
     });
-    const testCards = [];
-    for (let index = 0; index < 10; ++index) {
-        const element = debugCard.cloneNode(true);
-        board.appendChild(element);
-        const testCard = makeCard(element);
-        testCard.lerpAnimator.StartAnimation(testCard.currentPosition, Vec2.add(testCard.currentPosition, new Vec2(index * 30, 0)), .5, BezierPreset.EaseInOut);
-        setupCardInput(testCard);
-        testCards.push(testCard);
-    }
-    const cardCollectionParams = {
-        itemStyle: "width : 5em; height: 5em",
-    };
-    const allCardCollections = [];
-    const allCardCollectionElements = document.getElementsByClassName('card-collection');
-    for (let index = 0; index < allCardCollectionElements.length; ++index) {
-        const element = allCardCollectionElements.item(index);
-        allCardCollections.push(setupCardCollection(element, cardCollectionParams));
-    }
     board.addEventListener('mousemove', (ev) => {
         const mousePosition = new Vec2(ev.clientX, ev.clientY);
         let currentHoveredCollection = null;
@@ -159,56 +141,10 @@ function runMain() {
             }
         }
     });
-    {
-        const cardCollectionElement = document.getElementById('mock-collection');
-        const cardCollection = cardCollectionElement;
-        testCards.forEach((el) => {
-            cardCollection.PushCardInstant(el);
-        });
-    }
-    {
-        const flipCollection = document.getElementById('flip-collection');
-        (_a = document.getElementById('flip-button')) === null || _a === void 0 ? void 0 : _a.addEventListener('click', ev => {
-            flipCollection.itemInUse.forEach(item => {
-                if (item.assignedCard) {
-                    item.assignedCard.AnimatedFlip(!item.assignedCard.isFlipped);
-                    playRandomFlipSfx();
-                }
-            });
-        });
-    }
-    {
-        const zoomCollection = document.getElementById('zoom-collection');
-        let zoomedCard = [];
-        (_b = document.getElementById('zoom-button')) === null || _b === void 0 ? void 0 : _b.addEventListener('click', ev => {
-            zoomCollection.itemInUse.forEach(item => {
-                if (item.assignedCard) {
-                    item.assignedCard.SetZoom(2);
-                    zoomedCard.push(item.assignedCard);
-                }
-            });
-        });
-        zoomCollection.addEventListener('card-detach', (ev) => {
-            ev.detail.card.SetZoom(1);
-            zoomedCard.splice(zoomedCard.findIndex(e => e.id === ev.detail.card.id), 1);
-        });
-        board.addEventListener('mousemove', ev => {
-            if (!zoomedCard) {
-                return;
-            }
-            zoomedCard.forEach(card => {
-                const delatDirection = Vec2.sub(new Vec2(ev.clientX, ev.clientY), card.currentPosition).scale(.5);
-                card.LookToward(delatDirection);
-            });
-        });
-    }
-    {
-        const shuffleCollectionElement = document.getElementById('shuffle-collection');
-        const shuffleCollection = setupDeckCollection(shuffleCollectionElement, {});
-        allCardCollections.push(shuffleCollection);
-        (_c = document.getElementById('shuffle-button')) === null || _c === void 0 ? void 0 : _c.addEventListener('click', _ => {
-            shuffleCollection.ShuffleAnimation();
-        });
+    for (let index = 0; index < 15; ++index) {
+        const shopCard = makeCard(mockCard.cloneNode(true));
+        board.appendChild(shopCard);
+        shopCard.SetFlip(true);
     }
 }
 window.addEventListener('load', () => {
