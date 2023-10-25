@@ -23,7 +23,6 @@
   },
   "homepage": "https://github.com/Redoxee/WebCardGame#readme",
   "devDependencies": {
-    "@types/uuid": "^9.0.4",
     "parcel": "^2.9.3"
   }
 }

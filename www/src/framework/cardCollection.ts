@@ -1,7 +1,7 @@
 import { Vec2 } from './vec';
-import { ICardPresentation } from './cardTool';
+import { ICardPresentation } from './cardPresentation';
 import { addCustomStyle, BoundingRect, uniqueId } from './domUtils';
-import { BezierPreset } from './math';
+import { BezierPreset } from './mathUtils';
 
 interface ICardCollectionItem extends HTMLDivElement {
 	assignedCard : ICardPresentation|null;

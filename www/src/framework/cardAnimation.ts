@@ -1,7 +1,7 @@
 import { Vec2 } from './vec';
-import { IBezierParams, BezierPreset, cubicInterpolationBezier, cubicInterpolationBezierFirstDerivative } from './math';
+import { IBezierParams, BezierPreset, cubicInterpolationBezier, cubicInterpolationBezierFirstDerivative } from './mathUtils';
 import { uniqueId } from './domUtils';
-import { ICardPresentation } from './cardTool';
+import { ICardPresentation } from './cardPresentation';
 
 let lastFrameTimeStamp = 0;
 let frameDelay = 0;

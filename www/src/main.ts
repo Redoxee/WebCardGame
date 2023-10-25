@@ -1,9 +1,9 @@
-import {Vec2, Vec3} from './vec';
-import {ICardPresentationOptions, addCardPresentationCapability, ICardPresentation} from './cardTool';
+import {Vec2, Vec3} from './framework/vec';
+import {ICardPresentationOptions, addCardPresentationCapability, ICardPresentation} from './framework/cardPresentation';
 import {setupSandboxCurves} from './curveSandbox';
-import {uniqueId ,addCustomStyle, BoundingRect} from './domUtils';
-import { cubicInterpolationBezier, cubicInterpolationBezierFirstDerivative, BezierPreset, IBezierParams } from './math';
-import { ICardCollection, setupCardCollection, SelectClosestItemSelector, ICardCollectionParameters, ICollectionEventDetails, ReservationResult, setupDeckCollection } from './cardCollectionTool';
+import {uniqueId ,addCustomStyle, BoundingRect} from './framework/domUtils';
+import { cubicInterpolationBezier, cubicInterpolationBezierFirstDerivative, BezierPreset, IBezierParams } from './framework/mathUtils';
+import { ICardCollection, setupCardCollection, SelectClosestItemSelector, ICardCollectionParameters, ICollectionEventDetails, ReservationResult, setupDeckCollection } from './framework/cardCollection';
 
 function runMain() {
 	const draggedZindex = 100;

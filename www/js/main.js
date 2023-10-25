@@ -1,8 +1,8 @@
-import { Vec2, Vec3 } from './vec';
-import { addCardPresentationCapability } from './cardTool';
-import { uniqueId, BoundingRect } from './domUtils';
-import { BezierPreset } from './math';
-import { setupCardCollection, SelectClosestItemSelector, ReservationResult, setupDeckCollection } from './cardCollectionTool';
+import { Vec2, Vec3 } from './framework/vec';
+import { addCardPresentationCapability } from './framework/cardPresentation';
+import { uniqueId, BoundingRect } from './framework/domUtils';
+import { BezierPreset } from './framework/mathUtils';
+import { setupCardCollection, SelectClosestItemSelector, ReservationResult, setupDeckCollection } from './framework/cardCollection';
 function runMain() {
     const draggedZindex = 100;
     const displayedCardItemParams = {

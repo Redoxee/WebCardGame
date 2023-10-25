@@ -1,5 +1,5 @@
-import { cubicInterpolationBezier, cubicInterpolationBezierFirstDerivative, IBezierParams } from "./math";
-import {addCustomStyle} from './domUtils';
+import { cubicInterpolationBezier, cubicInterpolationBezierFirstDerivative, IBezierParams } from "./framework/mathUtils";
+import {addCustomStyle} from './framework/domUtils';
 
 function setupSandboxCurves(bezierParams : IBezierParams) {
 

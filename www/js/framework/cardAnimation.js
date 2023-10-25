@@ -1,5 +1,5 @@
 import { Vec2 } from './vec';
-import { BezierPreset, cubicInterpolationBezier, cubicInterpolationBezierFirstDerivative } from './math';
+import { BezierPreset, cubicInterpolationBezier, cubicInterpolationBezierFirstDerivative } from './mathUtils';
 import { uniqueId } from './domUtils';
 let lastFrameTimeStamp = 0;
 let frameDelay = 0;

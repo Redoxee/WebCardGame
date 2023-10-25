@@ -1,5 +1,5 @@
-import { cubicInterpolationBezier, cubicInterpolationBezierFirstDerivative } from "./math";
-import { addCustomStyle } from './domUtils';
+import { cubicInterpolationBezier, cubicInterpolationBezierFirstDerivative } from "./framework/mathUtils";
+import { addCustomStyle } from './framework/domUtils';
 function setupSandboxCurves(bezierParams) {
     const sandboxDiv = document.createElement('div');
     sandboxDiv.id = 'curve-sandbox';
