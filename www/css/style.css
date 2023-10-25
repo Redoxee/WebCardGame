@@ -59,3 +59,12 @@ body {
 	left: 50%;
     transform: translate(-50%, -50%);
 }
+
+.card-description {
+	color: white;
+	font-size: .4em;
+	position: absolute;
+	margin: 0;
+	top : 76px;
+	left: 10px;
+}
