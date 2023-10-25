@@ -2,7 +2,7 @@ body {
 	display: flex;
 	justify-content: center;
 	align-items: center; 
-	height: 90vh;
+	height: 100vh;
 	background: rgb(4,2,42);
 	background: linear-gradient(0deg, rgba(4,2,42,1) 0%, rgba(39,39,97,1) 29%, rgba(2,2,60,1) 100%);
 	touch-action: none;
@@ -10,8 +10,86 @@ body {
 
 #game-board {
 	width: 100%;
-	height: 100%;
+	height: 100vh;
 	border: solid 3px yellow;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap : .5em 1em;
+}
+
+.game-section {
+	width: 100%;
+}
+
+#enemy-section {
+	display: flex;
+	flex-direction: row;
+	align-content: center;
+	justify-content: center;
+	max-height: 250px;
+}
+
+#enemy-portrait {
+	width: 250px;
+}
+
+#shop-section {
+	display: flex;
+	flex-direction: row;
+	align-content: center;
+	justify-content: center;
+	gap : 20px;
+}
+
+.deck-standard {
+	width: 100px;
+	height: 130px;
+}
+
+#shop {
+	width: 600px;
+	height: 130px;
+}
+
+#play-section {
+	display: flex;
+	flex-direction: row;
+	align-content: center;
+	justify-content: center;
+	min-height: 90pt;
+}
+
+#player-section {
+	display: flex;
+	flex-direction: row;
+	align-content: center;
+	justify-content: center;
+	min-height: 90pt;
+	gap:10pt;
+}
+
+#played-cards {
+	width: 100%;
+	padding: 2pt;
+
+	display: flex;
+	flex-direction: row;
+	justify-content: center;
+	align-items: center;
+	gap : .5em;
+}
+
+#player-hand {
+	width: 400pt;
+	height: 100pt;
+	padding: 2pt;
+
+	display: flex;
+	flex-direction: row;
+	justify-content: center;
+	align-items: center;
+	gap : .5em;
 }
 
 #card-root {

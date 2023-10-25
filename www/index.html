@@ -5,15 +5,6 @@
 		<link rel='stylesheet' type='text/css' href='css/style.css' />	  
 	</head>
 	<style>
-		#game-board {
-			display: flex;
-			flex-direction: row;
-			flex-wrap: wrap;
-			align-items: flex-start;
-			gap : .5em 1em;
-			height: auto;
-		}
-
 		#slide-test {
 			display: flex;
 			flex-direction: row;
@@ -115,13 +106,53 @@
 
 			transform: translate(-50%, -50%);
 		}
+
+		#slide-test {
+			display: none;
+		}
+		#collection-test {
+			display: none;
+		}
+		#flip-test {
+			display: none;
+		}
+		#zoom-test {
+			display: none;
+		}
+		#deck-shuffle-test {
+			display: none;
+		}
+
+		.game-section {
+			border: solid salmon;
+		}
+
+		#shop-section > * {
+			border: solid pink;
+		}
+
+		#player-section > * {
+			border: solid pink;
+		}
+
 	</style>
 	<body>
 		<div id='game-board'>
-			<audio src="medias/audio/Flip1.wav" class="flip-sfx" preload="auto"></audio>
-			<audio src="medias/audio/Flip2.wav" class="flip-sfx" preload="auto"></audio>
-			<audio src="medias/audio/Flip3.wav" class="flip-sfx" preload="auto"></audio>
-			<audio src="medias/audio/Flip4.wav" class="flip-sfx" preload="auto"></audio>
+			<div id='enemy-section' class='game-section'>
+				<img src="medias/textures/mock_enemy.png" id='enemy-portrait' alt="a terrifying montser">
+			</div>
+			<div id='shop-section' class='game-section'>
+				<div id='shop-deck' class='deck-standard'></div>
+				<div id='shop'></div>
+			</div>
+			<div id='play-section' class='game-section'>
+				<div id='played-cards'></div>
+			</div>
+			<div id='player-section' class='game-section'>
+				<div id='player-deck' class='deck-standard'></div>
+				<div id='player-hand'></div>
+				<div id='player-discard' class='deck-standard'></div>
+			</div>
 
 			<div id='slide-test' class='half-width border-white third-height'>
 				<div id='target-1' class='target'></div>
@@ -167,7 +198,14 @@
 				</div>
 			</div>
 		</div>
+
 	</body>
+	<div>
+		<audio src="medias/audio/Flip1.wav" class="flip-sfx" preload="auto"></audio>
+		<audio src="medias/audio/Flip2.wav" class="flip-sfx" preload="auto"></audio>
+		<audio src="medias/audio/Flip3.wav" class="flip-sfx" preload="auto"></audio>
+		<audio src="medias/audio/Flip4.wav" class="flip-sfx" preload="auto"></audio>
+	</div>
 
 	<script src='js/main.js' type='module'></script>
 </html>
