@@ -156,7 +156,7 @@ function addCardPresentationCapability(root : HTMLElement, options : ICardPresen
 		card.flipAnimator.StartAnimation(card.isFlipped, 750);
 	};
 
-	card.lerpAnimator = new CardLerpAnimation(card, 100);
+	card.lerpAnimator = new CardLerpAnimation(card);
 	card.flipAnimator = new CardFlipAnimation(card);
 
 	const bounds = new BoundingRect(card);

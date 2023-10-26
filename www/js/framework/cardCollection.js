@@ -74,7 +74,7 @@ function setupCardCollection(collectionELement, params) {
         }
         cardCollection.reservingItem.assignedCard = card;
         cardCollection.reservingItem.bounds.Recompute();
-        card.lerpAnimator.StartAnimation(cardCollection.reservingItem.assignedCard.currentPosition, cardCollection.reservingItem.bounds.centerPosition, 1, BezierPreset.Linear);
+        card.lerpAnimator.StartAnimation(cardCollection.reservingItem.assignedCard.currentPosition, cardCollection.reservingItem.bounds.centerPosition, 1, BezierPreset.Linear, 0);
         card.style.zIndex = cardCollection.reservingItem.index.toString();
         cardCollection.reservingItem = null;
     };
@@ -97,8 +97,7 @@ function setupCardCollection(collectionELement, params) {
             if (item.assignedCard) {
                 item.bounds.Recompute();
                 // item.assignedCard.SetPosition(item.bounds.centerPosition);
-                const b = new BoundingRect(item.assignedCard);
-                item.assignedCard.lerpAnimator.StartAnimation(item.assignedCard.currentPosition, item.bounds.centerPosition, 1, BezierPreset.EaseInOut);
+                item.assignedCard.lerpAnimator.StartAnimation(item.assignedCard.currentPosition, item.bounds.centerPosition, 1, BezierPreset.EaseInOut, 0);
                 item.assignedCard.style.zIndex = index.toString();
             }
         });
@@ -112,9 +111,12 @@ function setupCardCollection(collectionELement, params) {
             console.warn('detaching unkown card');
             return;
         }
-        cardCollection.removeChild(cardCollection.itemInUse[index]);
+        const item = cardCollection.itemInUse[index];
+        cardCollection.removeChild(item);
         cardCollection.itemInUse.splice(index, 1);
         cardCollection.SlideAllCardsToAssignedItems();
+        item.assignedCard = null;
+        cardCollection.itemPool.push(item);
         const event = new CustomEvent('card-detach', { detail: {
                 card
             } });
@@ -171,6 +173,17 @@ function setupDeckCollection(collectionElement, params) {
             const nextZindex = index;
             (_a = deck.itemInUse[index].assignedCard) === null || _a === void 0 ? void 0 : _a.circlingAnimation.StartAnimation(delay, anglePercentage, nextZindex.toString());
         }
+    };
+    deck.PopCard = () => {
+        if (deck.itemInUse.length < 1) {
+            return undefined;
+        }
+        const item = deck.itemInUse.pop();
+        deck.removeChild(item);
+        deck.itemPool.push(item);
+        const cardResult = item.assignedCard;
+        item.assignedCard = null;
+        return cardResult;
     };
     return deck;
 }

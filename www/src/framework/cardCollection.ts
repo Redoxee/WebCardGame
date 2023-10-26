@@ -79,14 +79,14 @@ function setupCardCollection(collectionELement : HTMLElement, params : ICardColl
 			const newItem = cardCollection.itemPool.pop()!;
 			cardCollection.appendChild(newItem);
 			cardCollection.itemInUse.push(newItem);
-			
+
 			const reservingIndex = selector(cardCollection.itemInUse);
-			
+
 			const numberOfItems = cardCollection.itemInUse.length;
 			for (let index = numberOfItems - 2; index >= reservingIndex; --index) {
 				cardCollection.itemInUse[index + 1].assignedCard = cardCollection.itemInUse[index].assignedCard;
 			}
-			
+
 			cardCollection.reservingItem = cardCollection.itemInUse[reservingIndex];
 			cardCollection.reservingItem.index = reservingIndex;
 			cardCollection.reservingItem.assignedCard = null;
@@ -98,7 +98,7 @@ function setupCardCollection(collectionELement : HTMLElement, params : ICardColl
 		else {
 			const reservingIndex = selector(cardCollection.itemInUse);
 			const previousEmptyIndex = cardCollection.reservingItem.index;
-			
+
 			if (reservingIndex !== previousEmptyIndex) {
 
 				if (reservingIndex > previousEmptyIndex) {
@@ -128,16 +128,17 @@ function setupCardCollection(collectionELement : HTMLElement, params : ICardColl
 			console.warn('Trying to assign card but no slot reserved!');
 			return;
 		}
-		
+
 		cardCollection.reservingItem.assignedCard = card;
-		
+
 		cardCollection.reservingItem.bounds.Recompute();
 		card.lerpAnimator.StartAnimation(
-			cardCollection.reservingItem.assignedCard.currentPosition, 
+			cardCollection.reservingItem.assignedCard.currentPosition,
 			cardCollection.reservingItem.bounds.centerPosition,
 			1,
-			BezierPreset.Linear);
-		
+			BezierPreset.Linear,
+			0);
+
 		card.style.zIndex = cardCollection.reservingItem.index.toString();
 		cardCollection.reservingItem = null;
 	};
@@ -156,7 +157,7 @@ function setupCardCollection(collectionELement : HTMLElement, params : ICardColl
 
 		cardCollection.itemPool.push(cardCollection.reservingItem);
 		cardCollection.reservingItem = null;
-		
+
 		cardCollection.SlideAllCardsToAssignedItems();
 	};
 
@@ -165,12 +166,12 @@ function setupCardCollection(collectionELement : HTMLElement, params : ICardColl
 			if(item.assignedCard) {
 				item.bounds.Recompute();
 				// item.assignedCard.SetPosition(item.bounds.centerPosition);
-				const b = new BoundingRect(item.assignedCard);
 				item.assignedCard.lerpAnimator.StartAnimation(
-					item.assignedCard.currentPosition, 
+					item.assignedCard.currentPosition,
 					item.bounds.centerPosition,
 					1,
-					BezierPreset.EaseInOut);
+					BezierPreset.EaseInOut,
+					0);
 				item.assignedCard.style.zIndex = index.toString();
 			}
 		});
@@ -187,9 +188,12 @@ function setupCardCollection(collectionELement : HTMLElement, params : ICardColl
 			return;
 		}
 
-		cardCollection.removeChild(cardCollection.itemInUse[index]);
+		const item = cardCollection.itemInUse[index];
+		cardCollection.removeChild(item);
 		cardCollection.itemInUse.splice(index, 1);
 		cardCollection.SlideAllCardsToAssignedItems();
+		item.assignedCard = null;
+		cardCollection.itemPool.push(item);
 
 		const event : CustomEvent<ICollectionEventDetails> = new CustomEvent('card-detach', { detail: {
 			card
@@ -236,7 +240,7 @@ function SelectClosestItemSelector(posX : number, posY : number) {
 				bestIndex = index;
 			}
 		}
-	
+
 		return bestIndex;
 	}
 
@@ -248,6 +252,7 @@ interface IDeckParameters extends ICardCollectionParameters {
 
 interface IDeckCollection extends ICardCollection {
 	ShuffleAnimation():void;
+	PopCard(): ICardPresentation|undefined;
 }
 
 function setupDeckCollection(collectionElement : HTMLElement, params : IDeckParameters) {
@@ -267,6 +272,19 @@ function setupDeckCollection(collectionElement : HTMLElement, params : IDeckPara
 
 			deck.itemInUse[index].assignedCard?.circlingAnimation.StartAnimation(delay, anglePercentage, nextZindex.toString());
 		}
+	}
+
+	deck.PopCard = ()=>{
+		if (deck.itemInUse.length < 1) {
+			return undefined;
+		}
+
+		const item = deck.itemInUse.pop()!;
+		deck.removeChild(item);
+		deck.itemPool.push(item);
+		const cardResult = item.assignedCard!;
+		item.assignedCard = null;
+		return cardResult;
 	}
 
 	return deck;
