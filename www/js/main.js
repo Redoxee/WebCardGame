@@ -101,7 +101,7 @@ function runMain() {
         lp = lp * lp;
         // converting to speed
         const lerpedSpeed = (maxSpeed - minSpeed) * lp + minSpeed;
-        card.lerpAnimator.StartAnimation(start, end, lerpedSpeed, BezierPreset.Linear);
+        card.lerpAnimator.StartAnimation(start, end, lerpedSpeed, BezierPreset.Linear, 100);
     }
     board.addEventListener('mousemove', (event) => {
         if (draggedObject) {
@@ -143,9 +143,22 @@ function runMain() {
     });
     for (let index = 0; index < 15; ++index) {
         const shopCard = makeCard(mockCard.cloneNode(true));
-        board.appendChild(shopCard);
+        document.body.appendChild(shopCard);
         shopCard.SetFlip(true);
+        shopDeck.InsertCardInstant(shopCard, shopDeck.itemInUse.length - 1);
     }
+    shopDeck.addEventListener('click', _ => {
+        shopDeck.SlideAllCardsToAssignedItems();
+        if (shopDeck.itemInUse.length > 0) {
+            const card = shopDeck.PopCard();
+            shopBoard.ReserveSlot(() => shopBoard.itemInUse.length - 1);
+            shopBoard.AssignCardToReservation(card);
+            card.AnimatedFlip(false);
+        }
+    });
+    shopBoard.addEventListener('click', _ => {
+        shopBoard.SlideAllCardsToAssignedItems();
+    });
 }
 window.addEventListener('load', () => {
     runMain();
