@@ -25,6 +25,7 @@ interface ICardPresentation extends HTMLElement {
 	circlingAnimation : CirclingAnimation;
 	currentPosition : Vec2;
 	isFlipped : boolean;
+	isZoomed : boolean;
 
 	cardItem : HTMLElement;
 	frontItems : HTMLElement[];
@@ -51,6 +52,8 @@ function addCardPresentationCapability(root : HTMLElement, options : ICardPresen
 	card.backItems =  Array.from(card.getElementsByClassName('back')).map(e => e as HTMLElement);
 	card.shadeItems =  Array.from(card.getElementsByClassName('shade')).map(e => e as HTMLElement);
 	card.shineItems =  Array.from(card.getElementsByClassName('shine')).map(e => e as HTMLElement);
+
+	card.isZoomed = false;
 
 	{
 		const cardItemCollection = Array.from(card.getElementsByClassName('card-item')).map(e => e as HTMLElement);
@@ -121,6 +124,7 @@ function addCardPresentationCapability(root : HTMLElement, options : ICardPresen
 	card.zoomElement.classList.add(smoothTransition);
 	card.SetZoom = (zoom) => {
 		card.zoomElement.style.transform = `scale(${zoom})`;
+		card.isZoomed = zoom !== 1;
 	};
 
 	card.SetSmoothOrientation = (enabled) => {

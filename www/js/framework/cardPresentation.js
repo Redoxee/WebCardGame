@@ -15,6 +15,7 @@ function addCardPresentationCapability(root, options) {
     card.backItems = Array.from(card.getElementsByClassName('back')).map(e => e);
     card.shadeItems = Array.from(card.getElementsByClassName('shade')).map(e => e);
     card.shineItems = Array.from(card.getElementsByClassName('shine')).map(e => e);
+    card.isZoomed = false;
     {
         const cardItemCollection = Array.from(card.getElementsByClassName('card-item')).map(e => e);
         if (cardItemCollection.length !== 1) {
@@ -69,6 +70,7 @@ function addCardPresentationCapability(root, options) {
     card.zoomElement.classList.add(smoothTransition);
     card.SetZoom = (zoom) => {
         card.zoomElement.style.transform = `scale(${zoom})`;
+        card.isZoomed = zoom !== 1;
     };
     card.SetSmoothOrientation = (enabled) => {
         if (enabled) {

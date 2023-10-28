@@ -154,6 +154,15 @@ function runMain() {
             shopBoard.ReserveSlot(() => shopBoard.itemInUse.length - 1);
             shopBoard.AssignCardToReservation(card);
             card.AnimatedFlip(false);
+            card.addEventListener('click', _ => {
+                console.log(card.isZoomed);
+                if (!card.isZoomed) {
+                    card.SetZoom(2.5);
+                }
+                else {
+                    card.SetZoom(1);
+                }
+            });
         }
     });
     shopBoard.addEventListener('click', _ => {
