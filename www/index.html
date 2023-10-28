@@ -5,153 +5,30 @@
 		<link rel='stylesheet' type='text/css' href='css/style.css' />	  
 	</head>
 	<style>
-		#slide-test {
-			display: flex;
-			flex-direction: row;
-			flex-wrap: wrap;
-			gap: 40%;
-			padding:0 3em;
-			height: 11em;
+		#game-board {
+			border: solid 3px yellow;
 		}
 
-		.target {
-			background-color: burlywood;
-			height: 3px;
-			width: 3px;
-		}
-
-		#collection-test {
-			display: flex;
-			flex-direction: column;
-			align-items: center;
-			justify-content: center;
-		}
-
-		#mock-collection {
-			width: auto;
-			max-width: 400pt;
-			height: 100pt;
+		.white-border {
 			border: solid white;
-			padding: 0 2em 0 2em;
-
-			display: flex;
-			flex-direction: row;
-			justify-content: center;
-			align-items: center;
-			gap : .5em;
 		}
-
-		#flip-test {
-			display: flex;
-			flex-direction: column;
-			align-items: center;
-			justify-content: center;
-		}
-
-		#flip-collection {
-			width: 6em;
-			height: 9em;
-			display: flex;
-			justify-content: center;
-			align-items: center;
-		}
-
-		#zoom-test {
-			display: flex;
-			flex-direction: column;
-			align-items: center;
-			justify-content: center;
-		}
-
-		#zoom-collection {
-			width: 6em;
-			height: 9em;
-			display: flex;
-			justify-content: center;
-			align-items: center;
-		}
-
-		.half-width {
-			width: 44%;
-		}
-
-		.third-height {
-			height: 20%;
-		}
-
-		.border-white {
-			border: solid white 3px;
-		}
-
-		#deck-shuffle-test {
-			display: flex;
-			flex-direction: column;
-			align-items: center;
-			justify-content: center;
-		}
-
-		.mock-deck {
-			width: 6em;
-			height: 9em;
-			border: solid white;
-			position: relative;
-		}
-
-		.mock-deck>* {
-			position: relative;
-			top : 50%;
-			left : 50%;
-			width: 0;
-			height: 0;
-
-			transform: translate(-50%, -50%);
-		}
-
-		#slide-test {
-			display: none;
-		}
-		#collection-test {
-			display: none;
-		}
-		#flip-test {
-			display: none;
-		}
-		#zoom-test {
-			display: none;
-		}
-		#deck-shuffle-test {
-			display: none;
-		}
-
-		.game-section {
-			border: solid salmon;
-		}
-
-		#shop-section > * {
-			border: solid pink;
-		}
-
-		#player-section > * {
-			border: solid pink;
-		}
-
 	</style>
 	<body>
 		<div id='game-board'>
-			<div id='enemy-section' class='game-section'>
+			<div id='enemy-section' class='game-section white-border'>
 				<img src="medias/textures/mock_enemy.png" id='enemy-portrait' alt="a terrifying montser">
 			</div>
 			<div id='shop-section' class='game-section'>
-				<div id='shop-deck' class='deck-standard'></div>
-				<div id='shop'></div>
+				<div id='shop-deck' class='deck-standard white-border'></div>
+				<div id='shop' class='white-border'></div>
 			</div>
 			<div id='play-section' class='game-section'>
-				<div id='played-cards'></div>
+				<div id='played-cards' class='white-border'></div>
 			</div>
 			<div id='player-section' class='game-section'>
-				<div id='player-deck' class='deck-standard'></div>
-				<div id='player-hand'></div>
-				<div id='player-discard' class='deck-standard'></div>
+				<div id='player-deck' class='deck-standard white-border'></div>
+				<div id='player-hand' class='white-border'></div>
+				<div id='player-discard' class='deck-standard white-border'></div>
 			</div>
 		</div>
 	</body>
@@ -159,14 +36,14 @@
 	<div id='mock-card' class='game-card'>
 		<div id='card' class='zoom-item'>
 			<div class = 'card-item'>
-				<img id='card-bg' class='overlay' src='medias/textures/CardBackground.png'></img>
+				<img id='card-bg' class='card-overlay' src='medias/textures/CardBackground.png'></img>
 				<img id='illustration' class='card-illustration' src='medias/textures/TestImage.png'></img>
-				<img class='overlay' src='medias/textures/CardFrame.png'></img>
-				<img id='shine' class='overlay shine' src='medias/textures/CardShine.png'></img>
-				<img class='overlay back' src='medias/textures/bg_back_ice.png'>
+				<img class='card-overlay' src='medias/textures/CardFrame.png'></img>
+				<img id='shine' class='card-overlay shine' src='medias/textures/CardShine.png'></img>
+				<img class='card-overlay back' src='medias/textures/bg_back_ice.png'>
 				<p class="front card-description">On play win the game</p>
-				<img class='overlay shine back' src='medias/textures/bg_back_shine.png'>
-				<img id='shade' class='overlay shade' src='medias/textures/CardShadow.png'></img>
+				<img class='card-overlay shine back' src='medias/textures/bg_back_shine.png'>
+				<img id='shade' class='card-overlay shade' src='medias/textures/CardShadow.png'></img>
 			</div>
 		</div>
 	</div>
