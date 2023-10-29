@@ -49,19 +49,22 @@ class CardLerpAnimation extends CardAnimation {
         this.bezierParams = BezierPreset.DefaultBezierParams;
         this.direction = Vec2.Zero.clone();
         this.id = uniqueId();
+        this.onEnd = undefined;
     }
     ;
-    StartAnimation(p0, p1, speed, bezierParams, rotationFactor) {
-        this.p0 = p0.clone();
-        this.p1 = p1.clone();
-        const distance = (Vec2.sub(p1, p0).length());
-        this.duration = distance / speed;
+    StartAnimation(params) {
+        var _a;
+        this.p0 = ((_a = params.p0) === null || _a === void 0 ? void 0 : _a.clone()) || this.target.currentPosition;
+        this.p1 = params.p1.clone();
+        this.travel = Vec2.sub(this.p1, this.p0);
+        const distance = (this.travel.length());
+        this.duration = distance / params.speed;
         this.startTime = performance.now() - frameDelay;
         this.elapsedTime = 0;
-        this.travel = Vec2.sub(p1, p0);
         this.direction = this.travel.norm();
-        this.bezierParams = bezierParams;
-        this.rotationFactor = rotationFactor;
+        this.bezierParams = params.bezierParams || BezierPreset.DefaultBezierParams;
+        this.rotationFactor = params.rotationFactor || 0;
+        this.onEnd = params.onEnd;
         if (!cardAnimations.find((e) => e.id === this.id)) {
             cardAnimations.push(this);
         }
@@ -77,6 +80,9 @@ class CardLerpAnimation extends CardAnimation {
                 this.target.LookToward(Vec2.Zero);
             }
             this.target.dispatchEvent(this.endEvent);
+            if (this.onEnd) {
+                this.onEnd();
+            }
             return true;
         }
         const t = this.elapsedTime / this.duration;

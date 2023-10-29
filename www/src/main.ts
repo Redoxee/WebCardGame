@@ -27,7 +27,10 @@ function runMain() {
 	const playerHand = setupCardCollection(document.getElementById('player-hand')!, displayedCardItemParams);
 	const playerDiscard = setupDeckCollection(document.getElementById('player-discard')!, {});
 
-	function makeCard(rootNode : HTMLElement) : ICardPresentation {
+	function makeCard() : ICardPresentation {
+		const rootNode = mockCard.cloneNode(true) as HTMLElement;
+		document.body.appendChild(rootNode);
+
 		const cardClassName = `PresentationCard${uniqueId()}`;
 		rootNode.classList.add(cardClassName);
 
@@ -127,12 +130,13 @@ function runMain() {
 		// converting to speed
 		const lerpedSpeed = (maxSpeed - minSpeed) * lp + minSpeed;
 		
-		card.lerpAnimator.StartAnimation(
-			start,
-			end,
-			lerpedSpeed,
-			BezierPreset.Linear,
-			100);
+		card.lerpAnimator.StartAnimation({
+			p0: start,
+			p1: end,
+			speed : lerpedSpeed,
+			bezierParams : BezierPreset.Linear,
+			rotationFactor : 100
+		});
 	}
 		
 	board.addEventListener('mousemove', (event) => {
@@ -182,31 +186,49 @@ function runMain() {
 		}
 	});
 
-	for (let index = 0; index < 15; ++index) {
-		const shopCard = makeCard(mockCard.cloneNode(true) as HTMLElement);
-		document.body.appendChild(shopCard);
-		shopCard.SetFlip(true);
-		shopDeck.InsertCardInstant(shopCard, shopDeck.itemInUse.length - 1);
+	{
+		for (let index = 0; index < 15; ++index) {
+			const shopCard = makeCard();
+			document.body.appendChild(shopCard);
+			shopCard.SetFlip(true);
+			shopDeck.InsertCardInstant(shopCard, 0);
+		}
+
+		shopDeck.addEventListener('click', _=> {
+			shopDeck.SlideAllCardsToAssignedItems();
+			if (shopDeck.itemInUse.length > 0) {
+				const card = shopDeck.PopCard()!;
+				console.log(card.style.zIndex);
+				shopBoard.ReserveSlot(()=>shopBoard.itemInUse.length - 1);
+				shopBoard.AssignCardToReservation(card);
+				card.AnimatedFlip(false);
+				
+				card.addEventListener('click', _=> {
+					console.log(card.isZoomed);
+					if (!card.isZoomed) {
+						card.SetZoom(2.5);
+					} else {
+						card.SetZoom(1);
+					}
+				});
+			}
+		});
+	}
+	
+	{
+		for (let index = 0; index  < 15; ++index) {
+			const card = makeCard();
+			playerDeck.InsertCardInstant(card, 0);
+			card.SetFlip(true);
+		}
 	}
 
-	shopDeck.addEventListener('click', _=> {
-		shopDeck.SlideAllCardsToAssignedItems();
-		if (shopDeck.itemInUse.length > 0) {
-			const card = shopDeck.PopCard()!;
-			shopBoard.ReserveSlot(()=>shopBoard.itemInUse.length - 1);
-			shopBoard.AssignCardToReservation(card);
-			card.AnimatedFlip(false);
-
-			card.addEventListener('click', _=> {
-				console.log(card.isZoomed);
-				if (!card.isZoomed) {
-					card.SetZoom(2.5);
-				} else {
-					card.SetZoom(1);
-				}
-			});
+	{
+		for (let index = 0; index < 1; ++index) {
+			const card = makeCard();
+			playerDiscard.InsertCardInstant(card, 0);
 		}
-	});
+	}
 
 	shopBoard.addEventListener('click',_=>{
 		shopBoard.SlideAllCardsToAssignedItems();

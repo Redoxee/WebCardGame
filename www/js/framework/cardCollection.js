@@ -73,9 +73,18 @@ function setupCardCollection(collectionELement, params) {
             return;
         }
         cardCollection.reservingItem.assignedCard = card;
+        const index = cardCollection.reservingItem.index;
         cardCollection.reservingItem.bounds.Recompute();
-        card.lerpAnimator.StartAnimation(cardCollection.reservingItem.assignedCard.currentPosition, cardCollection.reservingItem.bounds.centerPosition, 1, BezierPreset.Linear, 0);
-        card.style.zIndex = cardCollection.reservingItem.index.toString();
+        card.lerpAnimator.StartAnimation({
+            p0: cardCollection.reservingItem.assignedCard.currentPosition,
+            p1: cardCollection.reservingItem.bounds.centerPosition,
+            bezierParams: BezierPreset.Linear,
+            speed: 1,
+            rotationFactor: 0,
+            onEnd: () => {
+                card.style.zIndex = index.toString();
+            }
+        });
         cardCollection.reservingItem = null;
     };
     cardCollection.CancelReservation = () => {
@@ -96,8 +105,12 @@ function setupCardCollection(collectionELement, params) {
         cardCollection.itemInUse.forEach((item, index) => {
             if (item.assignedCard) {
                 item.bounds.Recompute();
-                // item.assignedCard.SetPosition(item.bounds.centerPosition);
-                item.assignedCard.lerpAnimator.StartAnimation(item.assignedCard.currentPosition, item.bounds.centerPosition, 1, BezierPreset.EaseInOut, 0);
+                item.assignedCard.lerpAnimator.StartAnimation({
+                    p0: item.assignedCard.currentPosition,
+                    p1: item.bounds.centerPosition,
+                    speed: 1,
+                    bezierParams: BezierPreset.EaseInOut,
+                });
                 item.assignedCard.style.zIndex = index.toString();
             }
         });
@@ -128,6 +141,7 @@ function setupCardCollection(collectionELement, params) {
         cardCollection.insertBefore(newItem, cardCollection.childNodes[index + 1]);
         newItem.assignedCard = card;
         cardCollection.bounds.Recompute();
+        card.style.zIndex = index.toString();
         cardCollection.itemInUse.forEach((item) => {
             if (!item.assignedCard) {
                 return;
