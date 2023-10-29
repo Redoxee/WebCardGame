@@ -198,7 +198,6 @@ function runMain() {
 			shopDeck.SlideAllCardsToAssignedItems();
 			if (shopDeck.itemInUse.length > 0) {
 				const card = shopDeck.PopCard()!;
-				console.log(card.style.zIndex);
 				shopBoard.ReserveSlot(()=>shopBoard.itemInUse.length - 1);
 				shopBoard.AssignCardToReservation(card);
 				card.AnimatedFlip(false);
@@ -221,6 +220,21 @@ function runMain() {
 			playerDeck.InsertCardInstant(card, 0);
 			card.SetFlip(true);
 		}
+
+		playerDeck.addEventListener('click', ()=>{
+			const handSize = 7;
+			if (playerHand.itemInUse.length > 7 || playerDeck.itemInUse.length < 1) {
+				return;
+			}
+			
+			const counter = Math.min(handSize - playerHand.itemInUse.length, playerDeck.itemInUse.length);
+			for (let index = 0; index < counter; ++index) {
+				const card = playerDeck.PopCard() as ICardPresentation;
+				playerHand.ReserveSlot(()=>playerHand.itemInUse.length - 1);
+				playerHand.AssignCardToReservation(card);
+				card.AnimatedFlip(false);
+			}
+		});
 	}
 
 	{
@@ -229,10 +243,19 @@ function runMain() {
 			playerDiscard.InsertCardInstant(card, 0);
 		}
 	}
+	
+	{
+		for (let index = 0; index < playerHand.itemPool.length; ++index) {
+			const item = playerHand.itemPool[index];
+			item.addEventListener('click',()=>{
+				const card = item.assignedCard!;
+				playerHand.DetachCard(card);
 
-	shopBoard.addEventListener('click',_=>{
-		shopBoard.SlideAllCardsToAssignedItems();
-	});
+				playedCards.ReserveSlot(()=>playedCards.itemInUse.length - 1);
+				playedCards.AssignCardToReservation(card);
+			});
+		}
+	}
 }
 
 window.addEventListener('load', ()=>{
