@@ -83,7 +83,8 @@ function setupCardCollection(collectionELement, params) {
             rotationFactor: 0,
             onEnd: () => {
                 card.style.zIndex = index.toString();
-            }
+            },
+            then: () => { }
         });
         cardCollection.reservingItem = null;
     };
@@ -110,6 +111,7 @@ function setupCardCollection(collectionELement, params) {
                     p1: item.bounds.centerPosition,
                     speed: 1,
                     bezierParams: BezierPreset.EaseInOut,
+                    then: () => { }
                 });
                 item.assignedCard.style.zIndex = index.toString();
             }
@@ -185,7 +187,12 @@ function setupDeckCollection(collectionElement, params) {
             const anglePercentage = index / deck.itemInUse.length;
             const delay = anglePercentage * 100;
             const nextZindex = index;
-            (_a = deck.itemInUse[index].assignedCard) === null || _a === void 0 ? void 0 : _a.circlingAnimation.StartAnimation(delay, anglePercentage, nextZindex.toString());
+            (_a = deck.itemInUse[index].assignedCard) === null || _a === void 0 ? void 0 : _a.circlingAnimation.StartAnimation({
+                delay,
+                anglePercentage: anglePercentage,
+                targetZIndex: nextZindex.toString(),
+                then: () => { }
+            });
         }
     };
     deck.PopCard = () => {

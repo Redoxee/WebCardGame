@@ -109,7 +109,8 @@ function runMain() {
             p1: end,
             speed: lerpedSpeed,
             bezierParams: BezierPreset.Linear,
-            rotationFactor: 100
+            rotationFactor: 100,
+            then: () => { }
         });
     }
     board.addEventListener('mousemove', (event) => {

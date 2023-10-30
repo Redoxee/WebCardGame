@@ -4,35 +4,41 @@ import { uniqueId } from './domUtils';
 let lastFrameTimeStamp = 0;
 let frameDelay = 0;
 const cardAnimations = [];
-function cardAnimationCallback(timeStamp) {
+function cardAnimationCallback() {
     const currentFrameTimeStamp = performance.now();
     frameDelay = currentFrameTimeStamp - lastFrameTimeStamp;
     lastFrameTimeStamp = currentFrameTimeStamp;
     for (let index = cardAnimations.length - 1; index > -1; --index) {
         const animationFinished = cardAnimations[index].AnimationFrame(frameDelay);
         if (animationFinished) {
+            cardAnimations[index].isRuning = false;
             cardAnimations.splice(index, 1);
         }
     }
     requestAnimationFrame(cardAnimationCallback);
 }
-cardAnimationCallback(performance.now());
+cardAnimationCallback();
 class CardAnimation {
     constructor(target) {
         this.target = target;
         this.id = uniqueId();
+        this.isRuning = false;
         this.startEvent = new CustomEvent('cardAnimationStart');
         this.endEvent = new CustomEvent('cardAnimationEnd');
     }
+    StartAnimation(params) {
+        this.then = params.then;
+    }
     StopAnimation() {
         const index = cardAnimations.findIndex(e => e.id === this.id);
+        this.isRuning = false;
         if (index < 0) {
             return;
         }
         cardAnimations.splice(index, 1);
         this.target.dispatchEvent(this.endEvent);
     }
-    AnimationFrame(dt) {
+    AnimationFrame(_dt) {
         throw new Error("methode not implemented");
     }
 }
@@ -54,6 +60,7 @@ class CardLerpAnimation extends CardAnimation {
     ;
     StartAnimation(params) {
         var _a;
+        super.StartAnimation(params);
         this.p0 = ((_a = params.p0) === null || _a === void 0 ? void 0 : _a.clone()) || this.target.currentPosition;
         this.p1 = params.p1.clone();
         this.travel = Vec2.sub(this.p1, this.p0);
@@ -65,6 +72,7 @@ class CardLerpAnimation extends CardAnimation {
         this.bezierParams = params.bezierParams || BezierPreset.DefaultBezierParams;
         this.rotationFactor = params.rotationFactor || 0;
         this.onEnd = params.onEnd;
+        this.isRuning = true;
         if (!cardAnimations.find((e) => e.id === this.id)) {
             cardAnimations.push(this);
         }
@@ -107,12 +115,13 @@ class CardFlipAnimation extends CardAnimation {
         this.startFaceDown = false;
         this.elapsedTime = 0;
     }
-    StartAnimation(startFaceDown, duration) {
-        this.duration = duration;
+    StartAnimation(params) {
+        super.StartAnimation(params);
+        this.duration = params.duration;
         const startTime = performance.now() - frameDelay;
-        this.endTime = startTime + duration;
+        this.endTime = startTime + params.duration;
         this.elapsedTime = 0;
-        this.startFaceDown = startFaceDown;
+        this.startFaceDown = params.startFaceDown;
         if (!cardAnimations.find((e) => e.id === this.id)) {
             cardAnimations.push(this);
         }
@@ -147,12 +156,13 @@ class CirclingAnimation extends CardAnimation {
         this.direction = 1;
         this.targetZIndex = "";
     }
-    StartAnimation(delay, anglePercentage, targetZIndex) {
-        this.elapsedTime = -delay;
+    StartAnimation(params) {
+        super.StartAnimation(params);
+        this.elapsedTime = -params.delay;
         if (!cardAnimations.find((e) => e.id === this.id)) {
             cardAnimations.push(this);
         }
-        const angleDelta = anglePercentage * Math.PI * 2;
+        const angleDelta = params.anglePercentage * Math.PI * 2;
         this.circleCenter = Vec2.sub(this.target.currentPosition, new Vec2(Math.sin(angleDelta), Math.cos(angleDelta)).scale(this.radius));
         this.angleDelta = angleDelta;
         this.startPosition = this.target.currentPosition;
@@ -163,7 +173,7 @@ class CirclingAnimation extends CardAnimation {
         else {
             this.direction = -1;
         }
-        this.targetZIndex = targetZIndex;
+        this.targetZIndex = params.targetZIndex;
     }
     AnimationFrame(dt) {
         this.elapsedTime += dt;

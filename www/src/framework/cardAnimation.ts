@@ -5,15 +5,16 @@ import { ICardPresentation } from './cardPresentation';
 
 let lastFrameTimeStamp = 0;
 let frameDelay = 0;
-const cardAnimations : CardAnimation[] = [] ;
+const cardAnimations : CardAnimation[] = [];
 
-function cardAnimationCallback(timeStamp : number) {
+function cardAnimationCallback() {
 	const currentFrameTimeStamp = performance.now();
 	frameDelay = currentFrameTimeStamp - lastFrameTimeStamp;
 	lastFrameTimeStamp = currentFrameTimeStamp;
 	for(let index = cardAnimations.length - 1; index > -1; --index) {
 		const animationFinished = cardAnimations[index].AnimationFrame(frameDelay);
 		if(animationFinished) {
+			cardAnimations[index].isRuning = false;
 			cardAnimations.splice(index, 1);
 		}
 	}
@@ -21,27 +22,40 @@ function cardAnimationCallback(timeStamp : number) {
 	requestAnimationFrame(cardAnimationCallback);
 }
 
-cardAnimationCallback(performance.now());
+cardAnimationCallback();
 
 type AnimationCallback = ()=>void;
+type AnimationThen = ()=>void;
+
+interface IStartAnimationParams {
+	then : AnimationThen;
+}
 
 class CardAnimation {
 	id : string;
 	target : ICardPresentation;
+	isRuning : boolean;
 
 	startEvent : CustomEvent;
 	endEvent : CustomEvent;
 
+	then? : AnimationThen;
+
 	constructor(target : ICardPresentation) {
 		this.target = target;
 		this.id = uniqueId();
-		
+		this.isRuning = false;
 		this.startEvent = new CustomEvent('cardAnimationStart');
 		this.endEvent = new CustomEvent('cardAnimationEnd');
 	}
 
+	StartAnimation(params : IStartAnimationParams) {
+		this.then = params.then;
+	}
+
 	StopAnimation() {
 		const index = cardAnimations.findIndex(e => e.id === this.id);
+		this.isRuning = false;
 		if(index < 0) {
 			return;
 		}
@@ -50,12 +64,12 @@ class CardAnimation {
 		this.target.dispatchEvent(this.endEvent);
 	}
 
-	AnimationFrame(dt : number) : boolean {
+	AnimationFrame(_dt : number) : boolean {
 		throw new Error("methode not implemented");
 	}
 }
 
-interface LerpAnimationParams {
+interface ILerpAnimationParams extends IStartAnimationParams {
 	p0? : Vec2;
 	p1 : Vec2; 
 	speed : number; 
@@ -92,7 +106,8 @@ class CardLerpAnimation extends CardAnimation {
 		this.onEnd = undefined;
 	};
 	
-	StartAnimation(params : LerpAnimationParams) {
+	StartAnimation(params : ILerpAnimationParams) {
+		super.StartAnimation(params);
 		this.p0 = params.p0?.clone() || this.target.currentPosition;
 		this.p1 = params.p1.clone();
 		this.travel = Vec2.sub(this.p1, this.p0);
@@ -104,6 +119,7 @@ class CardLerpAnimation extends CardAnimation {
 		this.bezierParams = params.bezierParams || BezierPreset.DefaultBezierParams;
 		this.rotationFactor = params.rotationFactor || 0;
 		this.onEnd = params.onEnd;
+		this.isRuning = true;
 
 		if (!cardAnimations.find((e)=>e.id === this.id)) {
 			cardAnimations.push(this);
@@ -150,6 +166,11 @@ class CardLerpAnimation extends CardAnimation {
 	}
 }
 
+interface IStartAnimationFlipParams extends IStartAnimationParams {
+	startFaceDown : boolean;
+	duration : number;
+}
+
 class CardFlipAnimation extends CardAnimation {
 	duration : number;
 	startFaceDown : boolean;
@@ -164,12 +185,13 @@ class CardFlipAnimation extends CardAnimation {
 		this.elapsedTime = 0;
 	}
 
-	StartAnimation(startFaceDown : boolean, duration : number) {
-		this.duration = duration;
+	StartAnimation(params : IStartAnimationFlipParams) {
+		super.StartAnimation(params);
+		this.duration = params.duration;
 		const startTime = performance.now() - frameDelay;
-		this.endTime = startTime + duration;
+		this.endTime = startTime + params.duration;
 		this.elapsedTime = 0;
-		this.startFaceDown = startFaceDown;
+		this.startFaceDown = params.startFaceDown;
 
 		if (!cardAnimations.find((e)=>e.id === this.id)) {
 			cardAnimations.push(this);
@@ -201,6 +223,12 @@ class CardFlipAnimation extends CardAnimation {
 	}
 }
 
+interface IStartAnimationCircleParams extends IStartAnimationParams {
+	delay : number;
+	anglePercentage : number;
+	targetZIndex : string;
+}
+
 class CirclingAnimation extends CardAnimation {
 	duration : number;
 	elapsedTime : number;
@@ -223,14 +251,15 @@ class CirclingAnimation extends CardAnimation {
 		this.targetZIndex = "";
 	}
 
-	StartAnimation(delay : number, anglePercentage : number, targetZIndex : string) {
-		this.elapsedTime = -delay;
+	StartAnimation(params : IStartAnimationCircleParams) {
+		super.StartAnimation(params)
+		this.elapsedTime = -params.delay;
 		
 		if (!cardAnimations.find((e)=>e.id === this.id)) {
 			cardAnimations.push(this);
 		}
 		
-		const angleDelta = anglePercentage * Math.PI * 2;
+		const angleDelta = params.anglePercentage * Math.PI * 2;
 		this.circleCenter = Vec2.sub(this.target.currentPosition, new Vec2(Math.sin(angleDelta), Math.cos(angleDelta)).scale(this.radius));
 		this.angleDelta = angleDelta;
 		this.startPosition = this.target.currentPosition;
@@ -242,7 +271,7 @@ class CirclingAnimation extends CardAnimation {
 			this.direction = -1;
 		}
 
-		this.targetZIndex = targetZIndex;
+		this.targetZIndex = params.targetZIndex;
 	}
 
 	AnimationFrame(dt: number): boolean {

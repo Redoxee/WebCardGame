@@ -140,7 +140,8 @@ function setupCardCollection(collectionELement : HTMLElement, params : ICardColl
 			rotationFactor : 0,
 			onEnd : ()=>{
 				card.style.zIndex = index.toString();
-			}
+			},
+			then : ()=> {}
 		});
 
 		cardCollection.reservingItem = null;
@@ -174,6 +175,7 @@ function setupCardCollection(collectionELement : HTMLElement, params : ICardColl
 						p1 : item.bounds.centerPosition,
 						speed : 1,
 						bezierParams : BezierPreset.EaseInOut,
+						then : ()=> {}
 					});
 				item.assignedCard.style.zIndex = index.toString();
 			}
@@ -274,7 +276,12 @@ function setupDeckCollection(collectionElement : HTMLElement, params : IDeckPara
 			const delay = anglePercentage * 100;
 			const nextZindex = index;
 
-			deck.itemInUse[index].assignedCard?.circlingAnimation.StartAnimation(delay, anglePercentage, nextZindex.toString());
+			deck.itemInUse[index].assignedCard?.circlingAnimation.StartAnimation({
+					delay,
+					anglePercentage : anglePercentage,
+					targetZIndex : nextZindex.toString(),
+					then : ()=>{}
+				});
 		}
 	}
 

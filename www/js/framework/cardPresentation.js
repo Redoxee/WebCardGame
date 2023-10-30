@@ -97,7 +97,11 @@ function addCardPresentationCapability(root, options) {
         if (card.isFlipped === isFlipped) {
             return;
         }
-        card.flipAnimator.StartAnimation(card.isFlipped, 750);
+        card.flipAnimator.StartAnimation({
+            startFaceDown: card.isFlipped,
+            duration: 750,
+            then: () => { }
+        });
     };
     card.lerpAnimator = new CardLerpAnimation(card);
     card.flipAnimator = new CardFlipAnimation(card);
