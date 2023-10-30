@@ -4,6 +4,7 @@ import { uniqueId, BoundingRect } from './framework/domUtils';
 import { BezierPreset } from './framework/mathUtils';
 import { setupCardCollection, SelectClosestItemSelector, ReservationResult, setupDeckCollection } from './framework/cardCollection';
 function runMain() {
+    var _a;
     const draggedZindex = 100;
     const displayedCardItemParams = {
         itemStyle: "width : 5em; height: 5em",
@@ -183,7 +184,15 @@ function runMain() {
         }
         playerDeck.addEventListener('click', () => {
             const handSize = 7;
-            if (playerHand.itemInUse.length > 7 || playerDeck.itemInUse.length < 1) {
+            if (playerDeck.itemInUse.length < handSize) {
+                for (let index = playerDiscard.itemInUse.length - 1; index >= 0; --index) {
+                    const card = playerDiscard.PopCard();
+                    playerDeck.ReserveSlot(() => 0);
+                    playerDeck.AssignCardToReservation(card);
+                    card.AnimatedFlip(true);
+                }
+            }
+            if (playerHand.itemInUse.length > handSize || playerDeck.itemInUse.length < 1) {
                 return;
             }
             const counter = Math.min(handSize - playerHand.itemInUse.length, playerDeck.itemInUse.length);
@@ -211,6 +220,16 @@ function runMain() {
                 playedCards.AssignCardToReservation(card);
             });
         }
+    }
+    {
+        (_a = document.getElementById('end-turn-button')) === null || _a === void 0 ? void 0 : _a.addEventListener('click', _ => {
+            for (let index = playedCards.itemInUse.length - 1; index >= 0; --index) {
+                const card = playedCards.itemInUse[index].assignedCard;
+                playedCards.DetachCard(card);
+                playerDiscard.ReserveSlot(() => playerDiscard.itemInUse.length - 1);
+                playerDiscard.AssignCardToReservation(card);
+            }
+        });
     }
 }
 window.addEventListener('load', () => {

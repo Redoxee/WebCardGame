@@ -223,7 +223,16 @@ function runMain() {
 
 		playerDeck.addEventListener('click', ()=>{
 			const handSize = 7;
-			if (playerHand.itemInUse.length > 7 || playerDeck.itemInUse.length < 1) {
+			if (playerDeck.itemInUse.length < handSize) {
+				for (let index = playerDiscard.itemInUse.length - 1; index >= 0; --index) {
+					const card = playerDiscard.PopCard()!;
+					playerDeck.ReserveSlot(()=>0);
+					playerDeck.AssignCardToReservation(card);
+					card.AnimatedFlip(true);
+				}
+			}
+
+			if (playerHand.itemInUse.length > handSize || playerDeck.itemInUse.length < 1) {
 				return;
 			}
 			
@@ -255,6 +264,18 @@ function runMain() {
 				playedCards.AssignCardToReservation(card);
 			});
 		}
+	}
+
+	{
+		document.getElementById('end-turn-button')?.addEventListener('click',_=>{
+			for (let index = playedCards.itemInUse.length - 1; index >= 0 ; --index) {
+				const card = playedCards.itemInUse[index].assignedCard!;
+
+				playedCards.DetachCard(card);
+				playerDiscard.ReserveSlot(()=>playerDiscard.itemInUse.length - 1);
+				playerDiscard.AssignCardToReservation(card);
+			}
+		});
 	}
 }
 
