@@ -15,6 +15,10 @@ function cardAnimationCallback() {
 		const animationFinished = cardAnimations[index].AnimationFrame(frameDelay);
 		if(animationFinished) {
 			cardAnimations[index].isRuning = false;
+			if (cardAnimations[index].then) {
+				cardAnimations[index].then!();
+			}
+
 			cardAnimations.splice(index, 1);
 		}
 	}
@@ -28,10 +32,11 @@ type AnimationCallback = ()=>void;
 type AnimationThen = ()=>void;
 
 interface IStartAnimationParams {
-	then : AnimationThen;
+	then? : AnimationThen;
 }
 
 class CardAnimation {
+	animationName : string;
 	id : string;
 	target : ICardPresentation;
 	isRuning : boolean;
@@ -47,6 +52,7 @@ class CardAnimation {
 		this.isRuning = false;
 		this.startEvent = new CustomEvent('cardAnimationStart');
 		this.endEvent = new CustomEvent('cardAnimationEnd');
+		this.animationName = 'genericAnimation';
 	}
 
 	StartAnimation(params : IStartAnimationParams) {
@@ -75,7 +81,6 @@ interface ILerpAnimationParams extends IStartAnimationParams {
 	speed : number; 
 	bezierParams? : IBezierParams;
 	rotationFactor? : number;
-	onEnd? : AnimationCallback;
 }
 
 class CardLerpAnimation extends CardAnimation {
@@ -88,8 +93,6 @@ class CardLerpAnimation extends CardAnimation {
 	travel : Vec2;
 	bezierParams : IBezierParams;
 	direction : Vec2;
-	onEnd : AnimationCallback|undefined;
-
 
 	constructor(target : ICardPresentation) {
 		super(target);
@@ -103,7 +106,7 @@ class CardLerpAnimation extends CardAnimation {
 		this.bezierParams = BezierPreset.DefaultBezierParams;
 		this.direction = Vec2.Zero.clone();
 		this.id = uniqueId();
-		this.onEnd = undefined;
+		this.animationName = 'lerpAnimation';
 	};
 	
 	StartAnimation(params : ILerpAnimationParams) {
@@ -118,7 +121,6 @@ class CardLerpAnimation extends CardAnimation {
 		this.direction = this.travel.norm();
 		this.bezierParams = params.bezierParams || BezierPreset.DefaultBezierParams;
 		this.rotationFactor = params.rotationFactor || 0;
-		this.onEnd = params.onEnd;
 		this.isRuning = true;
 
 		if (!cardAnimations.find((e)=>e.id === this.id)) {
@@ -141,10 +143,6 @@ class CardLerpAnimation extends CardAnimation {
 			
 			this.target.dispatchEvent(this.endEvent);
 			
-			if(this.onEnd) {
-				this.onEnd();
-			}
-
 			return true;
 		}
 	
@@ -183,6 +181,7 @@ class CardFlipAnimation extends CardAnimation {
 		this.endTime = 0;
 		this.startFaceDown = false;
 		this.elapsedTime = 0;
+		this.animationName = 'cardFlip';
 	}
 
 	StartAnimation(params : IStartAnimationFlipParams) {
@@ -249,6 +248,7 @@ class CirclingAnimation extends CardAnimation {
 		this.angleDelta = 0;
 		this.direction = 1;
 		this.targetZIndex = "";
+		this.animationName = 'circling';
 	}
 
 	StartAnimation(params : IStartAnimationCircleParams) {

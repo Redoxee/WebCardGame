@@ -10,6 +10,7 @@ interface ICardCollectionItem extends HTMLDivElement {
 }
 
 type SlotIndexSelector = (availableSlots : ICardCollectionItem[]) => number;
+type ThenAction = ()=>void;
 
 interface ICollectionEventDetails {
 	card : ICardPresentation;
@@ -35,7 +36,7 @@ interface ICardCollection extends HTMLElement {
 
 	ReserveSlot : (selector : SlotIndexSelector)=>ReservationResult;
 	CancelReservation : ()=>void;
-	AssignCardToReservation : (card : ICardPresentation)=>void;
+	AssignCardToReservation : (card : ICardPresentation, then?: ThenAction)=>void;
 	ContainsCard : (card : ICardPresentation) => boolean;
 	DetachCard : (card : ICardPresentation) => void;
 	SlideAllCardsToAssignedItems : ()=>void;
@@ -123,7 +124,7 @@ function setupCardCollection(collectionELement : HTMLElement, params : ICardColl
 		return ReservationResult.Same;
 	};
 
-	cardCollection.AssignCardToReservation = (card : ICardPresentation) => {
+	cardCollection.AssignCardToReservation = (card : ICardPresentation, then ?: ()=>void) => {
 		if (!cardCollection.reservingItem) {
 			console.warn('Trying to assign card but no slot reserved!');
 			return;
@@ -135,13 +136,15 @@ function setupCardCollection(collectionELement : HTMLElement, params : ICardColl
 		card.lerpAnimator.StartAnimation({
 			p0 : cardCollection.reservingItem.assignedCard.currentPosition,
 			p1 : cardCollection.reservingItem.bounds.centerPosition,
-			bezierParams : BezierPreset.Linear,
+			bezierParams : BezierPreset.EaseInOut,
 			speed : 1,
 			rotationFactor : 0,
-			onEnd : ()=>{
+			then : ()=> {
 				card.style.zIndex = index.toString();
-			},
-			then : ()=> {}
+				if(then) {
+					then();
+				}
+			}
 		});
 
 		cardCollection.reservingItem = null;
@@ -257,15 +260,19 @@ interface IDeckParameters extends ICardCollectionParameters {
 }
 
 interface IDeckCollection extends ICardCollection {
-	ShuffleAnimation():void;
+	ShuffleAnimation(then? : ThenAction):void;
 	PopCard(): ICardPresentation|undefined;
 }
 
 function setupDeckCollection(collectionElement : HTMLElement, params : IDeckParameters) {
 	const deck = setupCardCollection(collectionElement, params) as IDeckCollection;
 
-	deck.ShuffleAnimation = () => {
+	deck.ShuffleAnimation = (then ?:ThenAction ) => {
 		if (deck.itemInUse.length < 1) {
+			if(then) {
+				then();
+			}
+
 			return;
 		}
 
@@ -276,11 +283,13 @@ function setupDeckCollection(collectionElement : HTMLElement, params : IDeckPara
 			const delay = anglePercentage * 100;
 			const nextZindex = index;
 
+			const thenAction = index === (deck.itemInUse.length - 1) ? then: undefined;
+
 			deck.itemInUse[index].assignedCard?.circlingAnimation.StartAnimation({
 					delay,
 					anglePercentage : anglePercentage,
 					targetZIndex : nextZindex.toString(),
-					then : ()=>{}
+					then : thenAction
 				});
 		}
 	}
@@ -301,4 +310,4 @@ function setupDeckCollection(collectionElement : HTMLElement, params : IDeckPara
 	return deck;
 }
 
-export { ICardCollection, ICardCollectionParameters, IDeckCollection, ICollectionEventDetails, ReservationResult, setupCardCollection, SelectClosestItemSelector, setupDeckCollection };
+export { ICardCollection, ICardCollectionParameters, IDeckCollection, ICollectionEventDetails, ThenAction, ReservationResult, setupCardCollection, SelectClosestItemSelector, setupDeckCollection };

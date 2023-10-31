@@ -67,7 +67,7 @@ function setupCardCollection(collectionELement, params) {
         }
         return ReservationResult.Same;
     };
-    cardCollection.AssignCardToReservation = (card) => {
+    cardCollection.AssignCardToReservation = (card, then) => {
         if (!cardCollection.reservingItem) {
             console.warn('Trying to assign card but no slot reserved!');
             return;
@@ -78,13 +78,15 @@ function setupCardCollection(collectionELement, params) {
         card.lerpAnimator.StartAnimation({
             p0: cardCollection.reservingItem.assignedCard.currentPosition,
             p1: cardCollection.reservingItem.bounds.centerPosition,
-            bezierParams: BezierPreset.Linear,
+            bezierParams: BezierPreset.EaseInOut,
             speed: 1,
             rotationFactor: 0,
-            onEnd: () => {
+            then: () => {
                 card.style.zIndex = index.toString();
-            },
-            then: () => { }
+                if (then) {
+                    then();
+                }
+            }
         });
         cardCollection.reservingItem = null;
     };
@@ -177,9 +179,12 @@ function SelectClosestItemSelector(posX, posY) {
 }
 function setupDeckCollection(collectionElement, params) {
     const deck = setupCardCollection(collectionElement, params);
-    deck.ShuffleAnimation = () => {
+    deck.ShuffleAnimation = (then) => {
         var _a;
         if (deck.itemInUse.length < 1) {
+            if (then) {
+                then();
+            }
             return;
         }
         deck.itemInUse.splice(0, 0, deck.itemInUse.pop());
@@ -187,11 +192,12 @@ function setupDeckCollection(collectionElement, params) {
             const anglePercentage = index / deck.itemInUse.length;
             const delay = anglePercentage * 100;
             const nextZindex = index;
+            const thenAction = index === (deck.itemInUse.length - 1) ? then : undefined;
             (_a = deck.itemInUse[index].assignedCard) === null || _a === void 0 ? void 0 : _a.circlingAnimation.StartAnimation({
                 delay,
                 anglePercentage: anglePercentage,
                 targetZIndex: nextZindex.toString(),
-                then: () => { }
+                then: thenAction
             });
         }
     };

@@ -12,6 +12,9 @@ function cardAnimationCallback() {
         const animationFinished = cardAnimations[index].AnimationFrame(frameDelay);
         if (animationFinished) {
             cardAnimations[index].isRuning = false;
+            if (cardAnimations[index].then) {
+                cardAnimations[index].then();
+            }
             cardAnimations.splice(index, 1);
         }
     }
@@ -25,6 +28,7 @@ class CardAnimation {
         this.isRuning = false;
         this.startEvent = new CustomEvent('cardAnimationStart');
         this.endEvent = new CustomEvent('cardAnimationEnd');
+        this.animationName = 'genericAnimation';
     }
     StartAnimation(params) {
         this.then = params.then;
@@ -55,7 +59,7 @@ class CardLerpAnimation extends CardAnimation {
         this.bezierParams = BezierPreset.DefaultBezierParams;
         this.direction = Vec2.Zero.clone();
         this.id = uniqueId();
-        this.onEnd = undefined;
+        this.animationName = 'lerpAnimation';
     }
     ;
     StartAnimation(params) {
@@ -71,7 +75,6 @@ class CardLerpAnimation extends CardAnimation {
         this.direction = this.travel.norm();
         this.bezierParams = params.bezierParams || BezierPreset.DefaultBezierParams;
         this.rotationFactor = params.rotationFactor || 0;
-        this.onEnd = params.onEnd;
         this.isRuning = true;
         if (!cardAnimations.find((e) => e.id === this.id)) {
             cardAnimations.push(this);
@@ -88,9 +91,6 @@ class CardLerpAnimation extends CardAnimation {
                 this.target.LookToward(Vec2.Zero);
             }
             this.target.dispatchEvent(this.endEvent);
-            if (this.onEnd) {
-                this.onEnd();
-            }
             return true;
         }
         const t = this.elapsedTime / this.duration;
@@ -114,6 +114,7 @@ class CardFlipAnimation extends CardAnimation {
         this.endTime = 0;
         this.startFaceDown = false;
         this.elapsedTime = 0;
+        this.animationName = 'cardFlip';
     }
     StartAnimation(params) {
         super.StartAnimation(params);
@@ -155,6 +156,7 @@ class CirclingAnimation extends CardAnimation {
         this.angleDelta = 0;
         this.direction = 1;
         this.targetZIndex = "";
+        this.animationName = 'circling';
     }
     StartAnimation(params) {
         super.StartAnimation(params);

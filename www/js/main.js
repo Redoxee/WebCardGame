@@ -57,7 +57,6 @@ function runMain() {
     }
     function setupCardInput(targetCard) {
         targetCard.root.addEventListener('mousedown', (_) => {
-            console.log('hello');
             startInput(targetCard);
         });
         targetCard.root.addEventListener("touchstart", (ev) => {
@@ -166,7 +165,6 @@ function runMain() {
                 shopBoard.AssignCardToReservation(card);
                 card.AnimatedFlip(false);
                 card.addEventListener('click', _ => {
-                    console.log(card.isZoomed);
                     if (!card.isZoomed) {
                         card.SetZoom(2.5);
                     }
@@ -178,38 +176,54 @@ function runMain() {
         });
     }
     {
-        for (let index = 0; index < 15; ++index) {
+        for (let index = 0; index < 1; ++index) {
             const card = makeCard();
             playerDeck.InsertCardInstant(card, 0);
             card.SetFlip(true);
         }
-        playerDeck.addEventListener('click', () => {
-            const handSize = 7;
-            if (playerDeck.itemInUse.length < handSize) {
-                for (let index = playerDiscard.itemInUse.length - 1; index >= 0; --index) {
-                    const card = playerDiscard.PopCard();
-                    playerDeck.ReserveSlot(() => 0);
-                    playerDeck.AssignCardToReservation(card);
-                    card.AnimatedFlip(true);
-                }
-            }
-            if (playerHand.itemInUse.length > handSize || playerDeck.itemInUse.length < 1) {
-                return;
-            }
-            const counter = Math.min(handSize - playerHand.itemInUse.length, playerDeck.itemInUse.length);
-            for (let index = 0; index < counter; ++index) {
-                const card = playerDeck.PopCard();
-                playerHand.ReserveSlot(() => playerHand.itemInUse.length - 1);
-                playerHand.AssignCardToReservation(card);
-                card.AnimatedFlip(false);
-            }
-        });
-    }
-    {
-        for (let index = 0; index < 1; ++index) {
+        for (let index = 0; index < 7; ++index) {
             const card = makeCard();
             playerDiscard.InsertCardInstant(card, 0);
         }
+    }
+    {
+        playerDeck.addEventListener('click', () => {
+            const handSize = 7;
+            const drawCards = () => {
+                if (playerHand.itemInUse.length > handSize || playerDeck.itemInUse.length < 1) {
+                    return;
+                }
+                const counter = Math.min(handSize - playerHand.itemInUse.length, playerDeck.itemInUse.length);
+                for (let index = 0; index < counter; ++index) {
+                    const card = playerDeck.PopCard();
+                    playerHand.ReserveSlot(() => 0);
+                    playerHand.AssignCardToReservation(card);
+                    card.AnimatedFlip(false);
+                }
+            };
+            if (playerDeck.itemInUse.length < handSize && playerDiscard.itemInUse.length > 0) {
+                let nbCards = playerDiscard.itemInUse.length;
+                for (let index = nbCards - 1; index >= 0; --index) {
+                    const card = playerDiscard.PopCard();
+                    card.style.zIndex = draggedZindex.toString();
+                    playerDeck.ReserveSlot(() => 0);
+                    card.AnimatedFlip(true);
+                    if (index > 0) {
+                        playerDeck.AssignCardToReservation(card);
+                    }
+                    else {
+                        playerDeck.AssignCardToReservation(card, () => {
+                            playerDeck.ShuffleAnimation(() => {
+                                drawCards();
+                            });
+                        });
+                    }
+                }
+            }
+            else {
+                drawCards();
+            }
+        });
     }
     {
         for (let index = 0; index < playerHand.itemPool.length; ++index) {
