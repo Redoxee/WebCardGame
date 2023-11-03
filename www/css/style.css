@@ -96,7 +96,7 @@ body {
 	flex-direction: row;
 	justify-content: center;
 	align-items: center;
-	gap : 5px;
+	gap : 50px;
 }
 
 #end-turn-section {
@@ -128,7 +128,7 @@ body {
 	flex-direction: row;
 	justify-content: center;
 	align-items: center;
-	gap : 5px;
+	gap : 50px;
 }
 
 .game-card {

@@ -273,7 +273,7 @@ function runMain() {
 			item.addEventListener('click',()=>{
 				const card = item.assignedCard!;
 				playerHand.DetachCard(card);
-
+				card.UnsetEmphase();
 				playedCards.ReserveSlot(()=>playedCards.itemInUse.length - 1);
 				playedCards.AssignCardToReservation(card);
 			});
@@ -289,6 +289,22 @@ function runMain() {
 				playerDiscard.ReserveSlot(()=>playerDiscard.itemInUse.length - 1);
 				playerDiscard.AssignCardToReservation(card);
 			}
+		});
+	}
+
+	{
+		playerHand.itemPool.forEach(item => {
+			item.addEventListener('mouseenter',()=>{
+				if(item.assignedCard) {
+					item.assignedCard.SetEmphase(2, new Vec2(0, -50), draggedZindex);
+				}
+			});
+
+			item.addEventListener('mouseleave',()=>{
+				if(item.assignedCard) {
+					item.assignedCard.UnsetEmphase();
+				}
+			});
 		});
 	}
 }

@@ -16,6 +16,7 @@ function addCardPresentationCapability(root, options) {
     card.shadeItems = Array.from(card.getElementsByClassName('shade')).map(e => e);
     card.shineItems = Array.from(card.getElementsByClassName('shine')).map(e => e);
     card.isZoomed = false;
+    card.cachedZIndex = card.style.zIndex;
     {
         const cardItemCollection = Array.from(card.getElementsByClassName('card-item')).map(e => e);
         if (cardItemCollection.length !== 1) {
@@ -65,12 +66,30 @@ function addCardPresentationCapability(root, options) {
     };
     const smoothTransition = addCustomStyle({
         className: "zoomin",
-        content: "transition: transform 0.25s ease-out;"
+        content: "transition: transform 0.25s ease-in-out;"
     });
     card.zoomElement.classList.add(smoothTransition);
     card.SetZoom = (zoom) => {
         card.zoomElement.style.transform = `scale(${zoom})`;
-        card.isZoomed = zoom !== 1;
+        const isZooming = zoom !== 1;
+        if (isZooming && !card.isZoomed) {
+            card.cachedZIndex = card.style.zIndex;
+        }
+        card.isZoomed = isZooming;
+    };
+    card.SetEmphase = (zoom, offset, zIndex) => {
+        const isZooming = zoom !== 1;
+        if (isZooming && !card.isZoomed) {
+            card.cachedZIndex = card.style.zIndex;
+        }
+        card.zoomElement.style.transform = `scale(${zoom}) translate(${offset.x}px, ${offset.y}px)`;
+        card.style.zIndex = zIndex.toString();
+        card.isZoomed = isZooming;
+    };
+    card.UnsetEmphase = () => {
+        card.zoomElement.style.transform = `scale(1)`;
+        card.isZoomed = false;
+        card.style.zIndex = card.cachedZIndex;
     };
     card.SetSmoothOrientation = (enabled) => {
         if (enabled) {

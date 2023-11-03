@@ -26,6 +26,7 @@ interface ICardPresentation extends HTMLElement {
 	currentPosition : Vec2;
 	isFlipped : boolean;
 	isZoomed : boolean;
+	cachedZIndex : string;
 
 	cardItem : HTMLElement;
 	frontItems : HTMLElement[];
@@ -34,10 +35,11 @@ interface ICardPresentation extends HTMLElement {
 	shineItems : HTMLElement[];
 	zoomElement : HTMLElement;
 
-
 	LookToward(position : Vec2) : void;
 	SetRotation(ax : number, ay : number) : void;
 	SetZoom(zoom : number) : void;
+	SetEmphase(zoom : number, offset: Vec2, zIndex: number) : void;
+	UnsetEmphase() : void;
 	SetSmoothOrientation(enabled : boolean) : void;
 	SetPosition(pos : Vec2) : void;
 	SetFlip(isFlipped : boolean) : void;
@@ -54,6 +56,7 @@ function addCardPresentationCapability(root : HTMLElement, options : ICardPresen
 	card.shineItems =  Array.from(card.getElementsByClassName('shine')).map(e => e as HTMLElement);
 
 	card.isZoomed = false;
+	card.cachedZIndex = card.style.zIndex;
 
 	{
 		const cardItemCollection = Array.from(card.getElementsByClassName('card-item')).map(e => e as HTMLElement);
@@ -118,14 +121,36 @@ function addCardPresentationCapability(root : HTMLElement, options : ICardPresen
 
 	const smoothTransition = addCustomStyle({
 		className:"zoomin",
-		content: "transition: transform 0.25s ease-out;"
+		content: "transition: transform 0.25s ease-in-out;"
 	});
 
 	card.zoomElement.classList.add(smoothTransition);
 	card.SetZoom = (zoom) => {
 		card.zoomElement.style.transform = `scale(${zoom})`;
-		card.isZoomed = zoom !== 1;
+		const isZooming = zoom !== 1;
+		if (isZooming && ! card.isZoomed) {
+			card.cachedZIndex = card.style.zIndex;
+		}
+
+		card.isZoomed = isZooming;
 	};
+
+	card.SetEmphase = (zoom , offset, zIndex) => {
+		const isZooming = zoom !== 1;
+		if (isZooming && !card.isZoomed) {
+			card.cachedZIndex = card.style.zIndex;
+		}
+
+		card.zoomElement.style.transform = `scale(${zoom}) translate(${offset.x}px, ${offset.y}px)`;
+		card.style.zIndex = zIndex.toString();
+		card.isZoomed = isZooming;
+	}
+
+	card.UnsetEmphase = ()=>{
+		card.zoomElement.style.transform = `scale(1)`;
+		card.isZoomed = false;
+		card.style.zIndex = card.cachedZIndex;
+	}
 
 	card.SetSmoothOrientation = (enabled) => {
 		if (enabled) {
